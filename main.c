@@ -1,11 +1,12 @@
-#include <windows.h>
+#include <stdio.h>
+#include <Windows.h>
 #include <stdbool.h>
+
 #include "renderer.h"
 
 static bool running = true;
-const int window_width = 1280;
-const int window_height = 20;
-
+const int window_width = 1200;
+const int window_height = 720;
 
 struct {
     int width;
@@ -63,6 +64,7 @@ int WINAPI WinMain(HINSTANCE hInstance,
     ShowWindow(window_handle, showCmd);
     MSG msg = {0};
 
+
     while (running) 
     {
         while(PeekMessage(&msg, 0, 0, 0, PM_REMOVE)) 
@@ -76,11 +78,20 @@ int WINAPI WinMain(HINSTANCE hInstance,
         }
 
         static unsigned int p = 0;
-        frame.pixels[(p++)%(frame.width*frame.height)] = rand();
-        frame.pixels[rand()%(frame.width*frame.height)] = 0;
+        // frame.pixels[(p++)%(frame.width*frame.height)] = rand();
+        // frame.pixels[rand()%(frame.width*frame.height)] = 0;
+
+        int x, y = 0;
+
 
         InvalidateRect(window_handle, NULL, false);
         UpdateWindow(window_handle);
+        
+        for (int y=0;y<frame.height;y++) {
+            for (int x=0;x<frame.width;x++) {
+                frame.pixels[(x+frame.width*y)%(frame.height*frame.width)] = 0xFFFFFF;
+            }
+        }
 
         // clear_screen();
         // draw_rectangle();
