@@ -67,7 +67,8 @@
     "stdbool.h": "c",
     "wincrypt.h": "c",
     "string.h": "c",
-    "typeinfo": "c"
+    "typeinfo": "c",
+    "stdlib.h": "c"
   },
   "C_Cpp.errorSquiggles": "disabled"
 }

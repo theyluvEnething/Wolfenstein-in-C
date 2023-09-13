@@ -3,16 +3,14 @@
 #include <stdbool.h>
 
 #include "renderer.h"
+#include "frame.h"
+
+struct frame frame = {0};
 
 static bool running = true;
 const int window_width = 1200;
-const int window_height = 720;
+const int window_height = 800;
 
-struct {
-    int width;
-    int height;
-    uint32_t *pixels;
-} frame = {0};
 
 LRESULT CALLBACK WindowProc(HWND window_handle, UINT msg, WPARAM wParam, LPARAM lParam);
 
@@ -56,14 +54,13 @@ int WINAPI WinMain(HINSTANCE hInstance,
 
 
 
-
-
-
     
     /* GAME LOOP  */
     ShowWindow(window_handle, showCmd);
     MSG msg = {0};
 
+    print_pointer(&frame);
+    int moveX = 0;
 
     while (running) 
     {
@@ -81,18 +78,28 @@ int WINAPI WinMain(HINSTANCE hInstance,
         // frame.pixels[(p++)%(frame.width*frame.height)] = rand();
         // frame.pixels[rand()%(frame.width*frame.height)] = 0;
 
+
+
+
+        //draw_rectangle(&frame);
+
         int x, y = 0;
 
+        for (int y=0;y<frame.height;y++) {
+            for (int x=0;x<frame.width;x++) {
+                frame.pixels[(x+frame.width*y)%(frame.height*frame.width)] = 0x444444;
+            }
+        }
+
+        draw_line(&frame, 100, 0, 500, 500);
+        draw_rectangle(&frame, moveX, 500, 100, 100);
+        draw_circle(&frame, frame.width/2, frame.height/2, 100);
+
+        moveX++;
 
         InvalidateRect(window_handle, NULL, false);
         UpdateWindow(window_handle);
         
-        for (int y=0;y<frame.height;y++) {
-            for (int x=0;x<frame.width;x++) {
-                frame.pixels[(x+frame.width*y)%(frame.height*frame.width)] = 0xFFFFFF;
-            }
-        }
-
         // clear_screen();
         // draw_rectangle();
     }
@@ -122,7 +129,6 @@ LRESULT CALLBACK WindowProc(HWND window_handle,
                    SRCCOPY);
             EndPaint(window_handle, &paint);
         } break;
-
 
         /* INIT PIXELS */
         case WM_SIZE: {
