@@ -1,7 +1,6 @@
 #include <stdio.h>
 #include <Windows.h>
 #include <stdbool.h>
-
 #include "renderer.h"
 #include "frame.h"
 
@@ -62,6 +61,13 @@ int WINAPI WinMain(HINSTANCE hInstance,
     print_pointer(&frame);
     int moveX = 0;
 
+    int x1 = 500;
+    int y1 = 500; 
+    int x2 = 700;
+    int y2 = 300;
+    float deltaTime = 0;
+
+
     while (running) 
     {
         while(PeekMessage(&msg, 0, 0, 0, PM_REMOVE)) 
@@ -80,7 +86,6 @@ int WINAPI WinMain(HINSTANCE hInstance,
 
 
 
-
         //draw_rectangle(&frame);
 
         int x, y = 0;
@@ -91,11 +96,26 @@ int WINAPI WinMain(HINSTANCE hInstance,
             }
         }
 
-        draw_line(&frame, 100, 0, 500, 500);
+
+        draw_line(&frame, x1, y1, x2, y2);
+        IntSpinner(x1, y1, &x2, &y2, 200, deltaTime);
+        deltaTime += 0.01f;
+
+        //draw_rectangle(&frame, x1, y1, x2-x1, y2-y1);
+        //draw_line(&frame, x1, y1, x2, y2);
+            
+        //draw_line(&frame, x1, y1, x2, y1);
+        // draw_line(&frame, x1, y2, x2, y2);
+
+
         draw_rectangle(&frame, moveX, 500, 100, 100);
-        draw_circle(&frame, frame.width/2, frame.height/2, 100);
+        //draw_circle(&frame, frame.width/2, frame.height/2, 100);
 
         moveX++;
+
+        if (x2 <= x1 + 200) {
+
+        }
 
         InvalidateRect(window_handle, NULL, false);
         UpdateWindow(window_handle);
