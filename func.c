@@ -1,6 +1,6 @@
 #include <math.h>
-#include "func.h"
 #include <stdio.h>
+#include "func.h"
 
 /* float */
 float float_abs(float x) {
@@ -14,7 +14,6 @@ float float_clamp(float d, float min, float max) {
   const float t = d < min ? min : d;
   return t > max ? max : t;
 }
-
 
 /* INT */
 int int_abs(float x) {
@@ -31,10 +30,10 @@ int int_clamp(float d, float min, float max) {
   return (int)(t > max) ? max : t;
 }
 
-int min(float a, float b) {
+int int_min(float a, float b) {
   return (a < b) ? a : b;
 }
 
-int max(float a, float b) {
+int int_max(float a, float b) {
   return (a > b) ? a : b;
 }

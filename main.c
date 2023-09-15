@@ -90,38 +90,35 @@ int WINAPI WinMain(HINSTANCE hInstance,
 
         int x, y = 0;
 
-        for (int y=0;y<frame.height;y++) {
-            for (int x=0;x<frame.width;x++) {
-                frame.pixels[(x+frame.width*y)%(frame.height*frame.width)] = 0x444444;
-            }
-        }
+        background(0xFF00FF, &frame);
+        // for (int y=0;y<frame.height;y++) {
+        //     for (int x=0;x<frame.width;x++) {
+        //         frame.pixels[(x+frame.width*y)%(frame.height*frame.width)] = 0x444444;
+        //     }
+        // }
+
+        //draw_line(&frame, frame.width/2, 300, frame.width/2+10, 700);
+        //draw_line(&frame, 700, 700, 500, 500);
+
+        draw_center_circle(500, 300, 50, 0x00000F, &frame);
+
+        draw_line(x1, y1, x2, y2, 5, 0xFFFFFF, &frame);
+        draw_line(x1, y2, x2, y1, 5, 0xFFFFFF, &frame);
+        draw_line(x1, x1, x2, y1, 5, 0xFFFFFF, &frame);
+        draw_line(x1, y2, x2, y2, 5, 0xFFFFFF, &frame);
+        draw_line(x1, y1, x1, y2, 5, 0xFFFFFF, &frame);
+        draw_line(x2, y1, x2, y2, 5, 0xFFFFFF, &frame);
 
 
-        draw_line(&frame, x1, y1, x2, y2);
         IntSpinner(x1, y1, &x2, &y2, 200, deltaTime);
         deltaTime += 0.01f;
 
-        //draw_rectangle(&frame, x1, y1, x2-x1, y2-y1);
-        //draw_line(&frame, x1, y1, x2, y2);
-            
-        //draw_line(&frame, x1, y1, x2, y1);
-        // draw_line(&frame, x1, y2, x2, y2);
 
-
-        draw_rectangle(&frame, moveX, 500, 100, 100);
-        //draw_circle(&frame, frame.width/2, frame.height/2, 100);
-
-        moveX++;
-
-        if (x2 <= x1 + 200) {
-
-        }
-
+        update_screen(&window_handle);
+        /*
         InvalidateRect(window_handle, NULL, false);
         UpdateWindow(window_handle);
-        
-        // clear_screen();
-        // draw_rectangle();
+        */   
     }
 
     /* UPDATE RENDER */

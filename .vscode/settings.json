@@ -70,7 +70,8 @@
     "typeinfo": "c",
     "stdlib.h": "c",
     "func.h": "c",
-    "math.h": "c"
+    "math.h": "c",
+    "frame.h": "c"
   },
   "C_Cpp.errorSquiggles": "disabled"
 }
