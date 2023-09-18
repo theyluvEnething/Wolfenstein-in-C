@@ -3,12 +3,16 @@
 #include <stdbool.h>
 #include "renderer.h"
 #include "frame.h"
+#include "level.h"
 
 struct frame frame = {0};
+struct level level = {0};
+
+
+const int window_width = 1280;
+const int window_height = 720;
 
 static bool running = true;
-const int window_width = 1200;
-const int window_height = 800;
 
 
 LRESULT CALLBACK WindowProc(HWND window_handle, UINT msg, WPARAM wParam, LPARAM lParam);
@@ -47,10 +51,33 @@ int WINAPI WinMain(HINSTANCE hInstance,
                                 window_width, window_height,
                                 0, 0, hInstance, 0);
     
+    printf("Initializing Renderer. (%i | %i)\n", frame.width, frame.height);
+    
     if (window_handle == NULL) {
         return 1;
     }
 
+    /* GAME INIT */
+    char* mapArr[4] = {"########",
+                       "-------#",
+                       "-#######"};
+                     
+    char** map = mapArr;
+                  
+    init_Map(map, &level);
+
+    
+    // char initialMap[9][9] = {
+    //     {'#','#','#','#','#','#','#','#','#'},
+    //     {'#','_','_','_','_','_','_','_','#'},
+    //     {'#','_','_','_','_','_','_','_','#'},
+    //     {'#','_','_','_','_','_','_','_','#'},
+    //     {'#','_','_','_','_','_','_','_','#'},
+    //     {'#','_','_','_','_','_','_','_','#'},
+    //     {'#','_','_','_','_','_','_','_','#'},
+    //     {'#','_','_','_','_','_','_','_','#'},
+    //     {'#','#','#','#','#','#','#','#','#'}
+    // };
 
 
     
@@ -58,16 +85,16 @@ int WINAPI WinMain(HINSTANCE hInstance,
     ShowWindow(window_handle, showCmd);
     MSG msg = {0};
 
+    /* frame */
     print_pointer(&frame);
     int moveX = 0;
-
     int x1 = 500;
     int y1 = 500; 
     int x2 = 700;
     int y2 = 300;
     float deltaTime = 0;
 
-
+    /* level */
     while (running) 
     {
         while(PeekMessage(&msg, 0, 0, 0, PM_REMOVE)) 
@@ -83,7 +110,6 @@ int WINAPI WinMain(HINSTANCE hInstance,
         static unsigned int p = 0;
         // frame.pixels[(p++)%(frame.width*frame.height)] = rand();
         // frame.pixels[rand()%(frame.width*frame.height)] = 0;
-
 
 
         //draw_rectangle(&frame);
@@ -102,6 +128,8 @@ int WINAPI WinMain(HINSTANCE hInstance,
 
         draw_center_circle(500, 300, 50, 0x00000F, &frame);
 
+        //draw_pi_circle(100, 100, 50, 0x00000F, &frame);
+
         draw_line(x1, y1, x2, y2, 5, 0xFFFFFF, &frame);
         draw_line(x1, y2, x2, y1, 5, 0xFFFFFF, &frame);
         draw_line(x1, x1, x2, y1, 5, 0xFFFFFF, &frame);
@@ -109,6 +137,7 @@ int WINAPI WinMain(HINSTANCE hInstance,
         draw_line(x1, y1, x1, y2, 5, 0xFFFFFF, &frame);
         draw_line(x2, y1, x2, y2, 5, 0xFFFFFF, &frame);
 
+        draw_cube(300, 500, 100, 100, 2, 0xFFFFF, &frame);
 
         IntSpinner(x1, y1, &x2, &y2, 200, deltaTime);
         deltaTime += 0.01f;

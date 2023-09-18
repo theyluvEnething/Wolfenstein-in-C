@@ -17,6 +17,11 @@ void background(int color, struct frame* frame) {
     }
 }
 
+void draw_pixel(int posX, int posY, int color, struct frame* frame) {
+    frame->pixels[(int)(posX+posY*frame->width)%(frame->width*frame->height)] = color;
+}
+
+
 void draw_rectangle(int posX, int posY, int width, int height, int color, struct frame* frame) {
 
     int left = (width >= 0) ? posX : posX + width;
@@ -62,6 +67,20 @@ void draw_center_circle(int posX, int posY, int rad, int color, struct frame* fr
     }
 }
 
+void draw_pi_circle(int posX, int posY, int rad, int color, struct frame* frame) {
+    static const double PI = 3.1415926535;
+    double i, angle, x1, y1;
+
+    for (i = 0; i < 360; i += 0.1)
+    {
+        angle = i;
+        x1 = rad * cos(angle * PI / 180);
+        y1 = rad * sin(angle * PI / 180);
+
+        frame->pixels[(int)((posX + x1)*((posY+y1)*frame->width))%(frame->width*frame->height)] = color;
+    }
+}
+
 void draw_line(int x1, int y1, int x2, int y2, int width, int color, struct frame* frame) {
 
     /* Calculate Lines*/
@@ -84,26 +103,22 @@ void draw_line(int x1, int y1, int x2, int y2, int width, int color, struct fram
 
     /* Draw Lines */
     if (function <= 1) {
-        for (float x=left; x<right; x++) {
+        for (int x=left; x<right; x++) {
             int y = (sign > 0) ? (int)(x-left)*function : (int)(top-bottom)-(x-left)*function;
             //printf("(%i | %i)\n", (int)x, y);
             for (int i = -width/2; i <= width/2; i++) {
                 frame->pixels[(int)(x+frame->width*(y+i+bottom))%(frame->width*frame->height)] = color;
-            }
-            for (int j = -width/2; j < width/2; j++) {
-                frame->pixels[(int)(x+j+frame->width*(y+bottom))%(frame->width*frame->height)] = color;
-            }   
+                frame->pixels[(int)(x+i+frame->width*(y+bottom))%(frame->width*frame->height)] = color;
+            }  
         }
     } else {
-        for (float y=bottom; y<top; y++) {
+        for (int y=bottom; y<top; y++) {
             int x = (sign > 0) ? (int)(left-right)-(y-top)*(1/function)*-1 : (int)(left-right)-(y-bottom)*(1/function);
             //printf("(%i | %i)\n", (int)x, y);
             for (int i = -width/2; i <= width/2; i++) {
                 frame->pixels[(int)((right+(right-left)+x)+frame->width*(y+i))%(frame->width*frame->height)] = color;
+                frame->pixels[(int)((right+(right-left)+x)+i+frame->width*(y))%(frame->width*frame->height)] = color;
             }
-            for (int j = -width/2; j < width/2; j++) {
-                frame->pixels[(int)((right+(right-left)+x)+j+frame->width*(y))%(frame->width*frame->height)] = color;
-            }   
         } 
     }
     /* Draw circles on end-points */
@@ -129,7 +144,20 @@ void IntSpinner(int fixPoint_x, int fixPoint_y, int *spinX, int *spinY, int rad,
     *spinY = fixPoint_y + sinf(time) * rad; //+ sinf(time) * rad;
 }
 
+void draw_cube(int posX, int posY, int width, int height, int linewidth, int color, struct frame* frame) {
 
+    draw_line(posX, posY, posX + width, posY, linewidth, color, frame);
+    draw_line(posX, posY, posX, posY + height, linewidth, color, frame);
+    draw_line(posX + width, posY, posX + width, posY + height, linewidth, color, frame);
+    draw_line(posX, posY + height, posX + width, posY + height, linewidth, color, frame);
+
+    draw_line(posX+width, posY, posX+width+width/2, posY+height/2, linewidth, color, frame);
+    draw_line(posX+width, posY+height, posX+width+width/2, posY+height+height/2, linewidth, color, frame);
+    draw_line(posX, posY+height, posX+width/2, posY+height+height/2, linewidth, color, frame);
+
+    draw_line(posX+width/2, posY+height+height/2, posX+width+width/2, posY+height+height/2, linewidth, color, frame);
+    draw_line(posX+width+width/2, posY+height/2, posX+width+width/2, posY+height+height/2, linewidth, color, frame);
+}
 
 void print_pointer(struct frame *frame) {
     printf("========================\n");
