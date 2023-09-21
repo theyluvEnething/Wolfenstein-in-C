@@ -1,27 +1,46 @@
 #include <stdio.h>
 #include <Windows.h>
 #include <stdbool.h>
-#include "renderer.h"
-#include "frame.h"
-#include "level.h"
 
+#include "headers/renderer.h"
+#include "headers/frame.h"
+#include "headers/level.h"
+#include "headers/func.h"
+#include "headers/vector2.h"
+#include "headers/player.h"
+
+/* FRAME */
 struct frame frame = {0};
 struct frame debug = {0};
+/*========*/
+
+/* LEVEL */
 struct level level = {0};
+/*========*/
 
+/* PLAYER */
+struct player player = {0};
+/*========*/
 
-const int game_window_width = 1280;
-const int game_window_height = 720;
+/* INPUT */
+bool keyboard[256] = {0};
+struct {
+    int x, y;
+    uint_least8_t buttons;
+} mouse;
+enum 
+{ 
+    MOUSE_LEFT = 0b1, 
+    MOUSE_MIDDLE = 0b10, 
+    MOUSE_RIGHT = 0b100, 
+    MOUSE_X1 = 0b1000, 
+    MOUSE_X2 = 0b10000 
+};
+/*========*/
 
-const int debug_window_width = 500;
-const int debug_window_height = 500;
-
-
-static bool running = true;
-
-
+/* WINAPI32 */
 LRESULT CALLBACK GameWindowProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam);
-LRESULT CALLBACK GameWindowProc2(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam);
+LRESULT CALLBACK DebugWindowProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam);
 
 static BITMAPINFO frame_bitmap_info;
 static HBITMAP frame_bitmap = 0;
@@ -32,22 +51,45 @@ static HBITMAP debug_bitmap = 0;
 static HDC debug_device_context = 0;
 
 
+
+const int game_window_width = 1080;
+const int game_window_height = 720;
+
+const int debug_window_width = 800;
+const int debug_window_height = 500;
+
+
+static bool r_game_wnd = true;
+static bool r_debug_wnd = true;
+
+
+
+
 int WINAPI WinMain(HINSTANCE hInstance,
                    HINSTANCE pInstance, 
                    PSTR cmd,
                    int showCmd) 
 {
+    printf("\n=========================================\n");
+
+    float mn_ratio = game_window_width / (float)game_window_height;
+    float db_ratio = debug_window_width / (float)debug_window_height;
+    if (mn_ratio != db_ratio) {
+        print_warning("Incompatible ratio between main window and debug window.\n");
+        //printf(ANSI_COLOR_YELLOW "[WARNING]" ANSI_COLOR_RESET " - Incompatible ratio between main window and debug window.\n");
+    }
+
     /* INITIALIZE  */
     WNDCLASS game_wnd_class = {0};
-    const char CLASS_NAME[] = "EnethWindow";
+    const char CLASS_NAME[] = "GameWindow";
     game_wnd_class.lpfnWndProc = GameWindowProc;
     game_wnd_class.hInstance = hInstance;
     game_wnd_class.lpszClassName = CLASS_NAME;
     game_wnd_class.hCursor = LoadCursor(NULL, IDC_CROSS);
     
     WNDCLASS debug_wnd_class = {0};
-    const char CLASS_NAME_d[] = "EnethWindow";
-    debug_wnd_class.lpfnWndProc = GameWindowProc2;
+    const char CLASS_NAME_d[] = "DebugWindow";
+    debug_wnd_class.lpfnWndProc = DebugWindowProc;
     debug_wnd_class.hInstance = hInstance;
     debug_wnd_class.lpszClassName = CLASS_NAME_d;
     debug_wnd_class.hCursor = LoadCursor(NULL, IDC_CROSS);
@@ -96,7 +138,7 @@ int WINAPI WinMain(HINSTANCE hInstance,
 
     printf("Initializing Game Window. (%i | %i)\n", frame.width, frame.height);
 
-    HWND debug_hwnd = CreateWindowEx(0, CLASS_NAME, "Debug",
+    HWND debug_hwnd = CreateWindowEx(0, CLASS_NAME_d, "Debug",
                                 WS_OVERLAPPEDWINDOW|WS_VISIBLE,
                                 CW_USEDEFAULT, CW_USEDEFAULT,
                                 debug_window_width, debug_window_height,
@@ -112,83 +154,59 @@ int WINAPI WinMain(HINSTANCE hInstance,
     /* GAME INIT */
     
     // ADD ONE TO ARRAY FOR NULL TERMINATOR
-    char* mapArr[5] = {"########",
-                       "#------#",
-                       "#------#",
-                       "########"};
-                     
-    char** map = mapArr;
-                  
-    init_Map(map, &level);
+    char* mapArr[6] = {"###########",
+                       "#---------#",
+                       "#---------#",
+                       "#---------#",
+                       "###########"};
 
-    
-    // char initialMap[9][9] = {
-    //     {'#','#','#','#','#','#','#','#','#'},
-    //     {'#','_','_','_','_','_','_','_','#'},
-    //     {'#','_','_','_','_','_','_','_','#'},
-    //     {'#','_','_','_','_','_','_','_','#'},
-    //     {'#','_','_','_','_','_','_','_','#'},
-    //     {'#','_','_','_','_','_','_','_','#'},
-    //     {'#','_','_','_','_','_','_','_','#'},
-    //     {'#','_','_','_','_','_','_','_','#'},
-    //     {'#','#','#','#','#','#','#','#','#'}
-    // };
+    init_map((char**)mapArr, &level);
 
-
-    printf("Widht: %i, Height: %i", frame.width, frame.height);
-    printf("Widht: %i, Height: %i", debug.width, debug.height);
+    print_map(&level);
 
     /* GAME LOOP  */
     ShowWindow(game_hwnd, showCmd);
     ShowWindow(debug_hwnd, showCmd);
 
-    MSG msg = {0};
-
     /* frame */
     print_pointer(&frame);
-    int moveX = 0;
-    int x1 = 500;
-    int y1 = 500; 
-    int x2 = 700;
-    int y2 = 300;
-    float deltaTime = 0;
+    static unsigned int x1 = 100;
+    static unsigned int y1 = 100; 
+    static unsigned int x2 = 700;
+    static unsigned int y2 = 300;
+    static float deltaTime = 0;
 
     /* level */
-    while (running) 
+    while (r_game_wnd || r_debug_wnd) 
     {
-        while(PeekMessage(&msg, 0, 0, 0, PM_REMOVE)) 
-        {
-            if (msg.message == WM_QUIT) 
-            {
-                running = 0;
-            }
-            TranslateMessage(&msg);
-            DispatchMessage(&msg);
-        }
+		static MSG message = { 0 };
+		while(PeekMessage(&message, NULL, 0, 0, PM_REMOVE)) { DispatchMessage(&message); }
 
-        static unsigned int p = 0;
-        // frame.pixels[(p++)%(frame.width*frame.height)] = rand();
-        // frame.pixels[rand()%(frame.width*frame.height)] = 0;
+        static int keyboard_x = 0, keyboard_y = 0;
+        if(keyboard[VK_RIGHT] || keyboard['D']) ++keyboard_x;
+        if(keyboard[VK_LEFT]  || keyboard['A']) --keyboard_x;
+        if(keyboard[VK_UP]    || keyboard['W']) ++keyboard_y;
+        if(keyboard[VK_DOWN]  || keyboard['S']) --keyboard_y;
 
+        if(keyboard_x < 0)			keyboard_x = 0;
+		if(keyboard_x > frame.width-1)	keyboard_x = frame.width-1;
+		if(keyboard_y < 0)			keyboard_y = 0;
+		if(keyboard_y > frame.height-1)	keyboard_y = frame.height-1;
 
-        //draw_rectangle(&frame);
-
-        int x, y = 0;
 
         background(0xFF00FF, &frame);
         background(0x000000, &debug);
-        // for (int y=0;y<frame.height;y++) {
-        //     for (int x=0;x<frame.width;x++) {
-        //         frame.pixels[(x+frame.width*y)%(frame.height*frame.width)] = 0x444444;
-        //     }
-        // }
+        frame.pixels[keyboard_x + keyboard_y*frame.width] = 0x00ffffff;
 
-        //draw_line(&frame, frame.width/2, 300, frame.width/2+10, 700);
-        //draw_line(&frame, 700, 700, 500, 500);
+        db_map_level(&level, &debug);
+        //draw_center_circle(level.obstacles[0][0].x, level.obstacles[0][0].y, 5, 0xFFFFFF, &debug);
+        draw_center_circle(50, 0, 100, 0xFFFFFF, &frame);
 
-        draw_center_circle(500, 300, 50, 0x00000F, &frame);
+       // draw_center_circle(250, 250, 50, 0xFFFFFF, &debug);
+        draw_rectangle_wireframe(300, 300, 100, 100, 5, 0xFFFFF, &frame);
 
-        //draw_pi_circle(100, 100, 50, 0x00000F, &frame);
+        draw_line(5, 5, 500, 5, 15, 0xFFFFFF, &frame);
+
 
         draw_line(x1, y1, x2, y2, 5, 0xFFFFFF, &frame);
         draw_line(x1, y2, x2, y1, 5, 0xFFFFFF, &frame);
@@ -196,23 +214,21 @@ int WINAPI WinMain(HINSTANCE hInstance,
         draw_line(x1, y2, x2, y2, 5, 0xFFFFFF, &frame);
         draw_line(x1, y1, x1, y2, 5, 0xFFFFFF, &frame);
         draw_line(x2, y1, x2, y2, 5, 0xFFFFFF, &frame);
-
         draw_cube(300, 500, 100, 100, 2, 0xFFFFF, &frame);
-
         IntSpinner(x1, y1, &x2, &y2, 200, deltaTime);
-        deltaTime += 0.01f;
+        deltaTime += 0.02f;
 
 
-        update_screen(&game_hwnd);
+
+
         update_screen(&debug_hwnd);
-        /*
-        InvalidateRect(window_handle, NULL, false);
-        UpdateWindow(window_handle);
-        */   
+        update_screen(&game_hwnd);
     }
 
     /* UPDATE RENDER */
 
+    printf("=========================================\n");
+    PostQuitMessage(0);
     return 0;
 }
 
@@ -221,14 +237,15 @@ LRESULT CALLBACK GameWindowProc(HWND hwnd,
                             WPARAM wParam,
                             LPARAM lParam) 
 {
+    static bool has_focus = true;
     switch (message)
     {
         /* PAINT */
         case WM_PAINT: {
             static PAINTSTRUCT paint;
-            static HDC device_conext;
-            device_conext = BeginPaint(hwnd, &paint);
-            BitBlt(device_conext,
+            static HDC device_context;
+            device_context = BeginPaint(hwnd, &paint);
+            BitBlt(device_context,
                    paint.rcPaint.left, paint.rcPaint.top,
                    paint.rcPaint.right - paint.rcPaint.left, paint.rcPaint.bottom - paint.rcPaint.top,
                    frame_device_context,
@@ -254,10 +271,40 @@ LRESULT CALLBACK GameWindowProc(HWND hwnd,
          /* IDK (Close..?) */
         case WM_DESTROY:
         {
-            PostQuitMessage(0);
+            r_game_wnd = false;
+            r_debug_wnd = false;
+            //PostQuitMessage(0);
             return 0;
         } break;     
 
+        case WM_SETFOCUS: has_focus = true; break;
+
+        case WM_KILLFOCUS: {
+			has_focus = false;
+			memset(keyboard, 0, 256 * sizeof(keyboard[0]));
+			mouse.buttons = 0;
+		} break;
+
+        case WM_SYSKEYDOWN:
+		case WM_KEYDOWN:
+        {
+			if (!has_focus)
+                break;
+
+            static bool key_is_down, key_was_down;
+            key_is_down  = ((lParam & (1 << 31)) == 0);
+            key_was_down = ((lParam & (1 << 30)) != 0);
+
+            keyboard[(uint8_t)wParam] = key_is_down;
+            printf("%c", (char)(uint8_t)wParam);
+            if(!key_is_down)
+                break;
+
+            switch(wParam) 
+            {
+                case VK_ESCAPE: r_game_wnd = false; r_debug_wnd = false; break;
+            }
+        } break;
 
          /* DEFAULT */
         default: {
@@ -267,26 +314,26 @@ LRESULT CALLBACK GameWindowProc(HWND hwnd,
     return 0;
 }
 
-LRESULT CALLBACK GameWindowProc2(HWND hwnd, 
+LRESULT CALLBACK DebugWindowProc(HWND hwnd, 
                             UINT message,
                             WPARAM wParam,
                             LPARAM lParam) 
 {
-    printf("\nInitzai9fadadaffafafgasdjasf\n");
+    static bool has_focus = true;
     switch (message)
     {
         /* PAINT */
         case WM_PAINT: {
-            static PAINTSTRUCT paint_d;
-            static HDC device_conext_d;
-            device_conext_d = BeginPaint(hwnd, &paint_d);
-            BitBlt(device_conext_d,
-                   paint_d.rcPaint.left, paint_d.rcPaint.top,
-                   paint_d.rcPaint.right - paint_d.rcPaint.left, paint_d.rcPaint.bottom - paint_d.rcPaint.top,
-                   device_conext_d,
-                   paint_d.rcPaint.left, paint_d.rcPaint.top,
+            static PAINTSTRUCT paint;
+            static HDC device_context;
+            device_context = BeginPaint(hwnd, &paint);
+            BitBlt(device_context,
+                   paint.rcPaint.left, paint.rcPaint.top,
+                   paint.rcPaint.right - paint.rcPaint.left, paint.rcPaint.bottom - paint.rcPaint.top,
+                   debug_device_context,
+                   paint.rcPaint.left, paint.rcPaint.top,
                    SRCCOPY);
-            EndPaint(hwnd, &paint_d);
+            EndPaint(hwnd, &paint);
         } break;
 
         /* INIT PIXELS */
@@ -306,10 +353,39 @@ LRESULT CALLBACK GameWindowProc2(HWND hwnd,
          /* IDK (Close..?) */
         case WM_DESTROY:
         {
-            PostQuitMessage(0);
+            r_debug_wnd = false;
+            //PostQuitMessage(0);
             return 0;
         } break;     
 
+        case WM_SETFOCUS: has_focus = true; break;
+
+        case WM_KILLFOCUS: {
+			has_focus = false;
+			memset(keyboard, 0, 256 * sizeof(keyboard[0]));
+			mouse.buttons = 0;
+		} break;
+
+        case WM_SYSKEYDOWN:
+		case WM_KEYDOWN:
+        {
+			if (!has_focus)
+                break;
+                
+            static bool key_is_down, key_was_down;
+            key_is_down  = ((lParam & (1 << 31)) == 0);
+            key_was_down = ((lParam & (1 << 30)) != 0);
+
+            keyboard[(uint8_t)wParam] = key_is_down;
+            printf("%c", (char)(uint8_t)wParam);
+            if(!key_is_down)
+                break;
+
+            switch(wParam) 
+            {
+                case VK_ESCAPE: r_game_wnd = false; r_debug_wnd = false; break;
+            }
+        } break;
 
          /* DEFAULT */
         default: {

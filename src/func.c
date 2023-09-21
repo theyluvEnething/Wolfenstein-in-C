@@ -1,6 +1,34 @@
 #include <math.h>
 #include <stdio.h>
-#include "func.h"
+#include <stdio.h>
+#include "headers/func.h"
+
+#define ANSI_COLOR_RED     "\x1b[31m"
+#define ANSI_COLOR_GREEN   "\x1b[32m"
+#define ANSI_COLOR_YELLOW  "\x1b[33m"
+#define ANSI_COLOR_BLUE    "\x1b[34m"
+#define ANSI_COLOR_MAGENTA "\x1b[35m"
+#define ANSI_COLOR_CYAN    "\x1b[36m"
+#define ANSI_COLOR_RESET   "\x1b[0m"
+
+void print_endl() {
+  printf("\n");
+}
+
+void print_warning(const char* message) {
+    printf(ANSI_COLOR_YELLOW "[WARNING] " ANSI_COLOR_RESET);
+    for (int i = 0; message[i] != '\0'; i++) {
+        printf("%c", message[i]);
+    }
+}
+
+void print_error(const char* message) {
+    printf(ANSI_COLOR_RED "[ERROR] " ANSI_COLOR_RESET);
+    for (int i = 0; message[i] != '\0'; i++) {
+      printf("%c", message[i]);
+    }
+}
+
 
 /* float */
 float float_abs(float x) {

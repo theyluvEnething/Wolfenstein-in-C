@@ -72,7 +72,11 @@
     "func.h": "c",
     "math.h": "c",
     "frame.h": "c",
-    "level.h": "c"
+    "level.h": "c",
+    "vector2.h": "c",
+    "array": "c",
+    "system_error": "c",
+    "player.h": "c"
   },
   "C_Cpp.errorSquiggles": "disabled"
 }

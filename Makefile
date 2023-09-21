@@ -1,4 +1,4 @@
-src = main.c renderer.c func.c level.c
+src = src/main.c src/renderer.c src/func.c src/level.c
 
 all:
 	gcc -o doom $(src) -lgdi32 -lm
