@@ -2,13 +2,16 @@
 #include <Windows.h>
 #include <math.h>
 
-#include "headers/renderer.h"
 #include "headers/func.h"
 #include "headers/level.h"
 #include "headers/vector2.h"
+#include "headers/player.h"
+#include "headers/renderer.h"
 
-int getDirection(float x1, float y1, float x2, float y2);
+int get_direction(struct vector2 point1, struct vector2 point2);
 
+
+/* GENERAL METHODS */
 void update_screen(HWND* window_handle) {
     InvalidateRect(*window_handle, NULL, false);
     UpdateWindow(*window_handle);
@@ -20,17 +23,23 @@ void background(int color, struct frame* frame) {
     }
 }
 
-void draw_pixel(int posX, int posY, int color, struct frame* frame) {
-    frame->pixels[(int)(posX+posY*frame->width)%(frame->width*frame->height)] = color;
+void draw_pixel(struct vector2 pos, int color, struct frame* frame) {
+    frame->pixels[(int)(pos.x+pos.y*frame->width)%(frame->width*frame->height)] = color;
+}
+
+bool is_minimized(struct frame* frame) {
+    return frame->width == 0 || frame->height == 0;
 }
 
 
-void draw_rectangle(int posX, int posY, int width, int height, int color, struct frame* frame) {
 
-    int left = (width >= 0) ? posX : posX + width;
-    int right = (width >= 0) ? posX + width : posX;
-    int bottom = (height >= 0) ? posY : posY + height;
-    int top = (height >= 0) ? posY + height : posY;
+/* DRAWING METHODS */
+void draw_rectangle(struct vector2 pos, struct vector2 size, int color, struct frame* frame) {
+
+    int left = (size.x >= 0) ? pos.x : pos.x + size.x;
+    int right = (size.x >= 0) ? pos.x + size.x : pos.x;
+    int bottom = (size.y >= 0) ? pos.y : pos.y + size.y;
+    int top = (size.y >= 0) ? pos.y + size.y : pos.y;
 
     #pragma region 
     // printf("Height: %i\n", height);
@@ -47,33 +56,12 @@ void draw_rectangle(int posX, int posY, int width, int height, int color, struct
     }
 }
 
-void draw_rectangle_wireframe(int posX, int posY, int width, int height, int line_width, int color, struct frame* frame) {
+void draw_rectangle_wireframe(struct vector2 pos, struct vector2 size, int line_width, int color, struct frame* frame) {
 
-    int left = (width >= 0) ? posX : posX + width;
-    int right = (width >= 0) ? posX + width : posX;
-    int bottom = (height >= 0) ? posY : posY + height;
-    int top = (height >= 0) ? posY + height : posY;
-
-    #pragma region 
-    // printf("Height: %i\n", height);
-    // printf("Left: %i\n", left);
-    // printf("Right: %i\n", right);
-    // printf("Bottom: %i\n", bottom);
-    // printf("Top: %i\n\n", top);
-    #pragma endregion
-
-    draw_line(left, bottom, right, bottom, line_width, color, frame);
-    draw_line(left, top, right, top, line_width, color, frame);
-    draw_line(left, bottom, left, top, line_width, color, frame);
-    draw_line(right, bottom, right, top, line_width, color, frame);
-}
-
-void draw_rectangle_wireframe_filled(int posX, int posY, int width, int height, int line_width, int color, struct frame* frame) {
-
-    int left = (width >= 0) ? posX : posX + width;
-    int right = (width >= 0) ? posX + width : posX;
-    int bottom = (height >= 0) ? posY : posY + height;
-    int top = (height >= 0) ? posY + height : posY;
+    int left = (size.x >= 0) ? pos.x : pos.x + size.x;
+    int right = (size.x >= 0) ? pos.x + size.x : pos.x;
+    int bottom = (size.y >= 0) ? pos.y : pos.y + size.y;
+    int top = (size.y >= 0) ? pos.y + size.y : pos.y;
 
     #pragma region 
     // printf("Height: %i\n", height);
@@ -83,20 +71,40 @@ void draw_rectangle_wireframe_filled(int posX, int posY, int width, int height, 
     // printf("Top: %i\n\n", top);
     #pragma endregion
 
-    draw_line(left, bottom, right, bottom, line_width, color, frame);
-    draw_line(left, top, right, top, line_width, color, frame);
-    draw_line(left, bottom, left, top, line_width, color, frame);
-    draw_line(right, bottom, right, top, line_width, color, frame);
-    draw_line(left, bottom, right, top, line_width, color, frame);
-    draw_line(left, top, right, bottom, line_width, color, frame);
+    draw_line(vector2(left, bottom),    vector2(right, bottom),     line_width, color, frame);
+    draw_line(vector2(left, top),       vector2(right, top),        line_width, color, frame);
+    draw_line(vector2(left, bottom),    vector2(left, top),         line_width, color, frame);
+    draw_line(vector2(right, bottom),   vector2(right, top),        line_width, color, frame);
+}
+
+void draw_rectangle_wireframe_filled(struct vector2 pos, struct vector2 size, int line_width, int color, struct frame* frame) {
+
+    int left = (size.x >= 0) ? pos.x : pos.x + size.x;
+    int right = (size.x >= 0) ? pos.x + size.x : pos.x;
+    int bottom = (size.y >= 0) ? pos.y : pos.y + size.y;
+    int top = (size.y >= 0) ? pos.y + size.y : pos.y;
+
+    #pragma region 
+    // printf("Height: %i\n", height);
+    // printf("Left: %i\n", left);
+    // printf("Right: %i\n", right);
+    // printf("Bottom: %i\n", bottom);
+    // printf("Top: %i\n\n", top);
+    #pragma endregion
+
+    draw_line(vector2(left, bottom),    vector2(right, bottom),     line_width, color, frame);
+    draw_line(vector2(left, top),       vector2(right, top),        line_width, color, frame);
+    draw_line(vector2(left, bottom),    vector2(left, top),         line_width, color, frame);
+    draw_line(vector2(right, bottom),   vector2(right, top),        line_width, color, frame);
+    draw_line(vector2(left, bottom),    vector2(right, top),        line_width, color, frame);
+    draw_line(vector2(left, top),       vector2(right, bottom),     line_width, color, frame);
 }
 
 
-void draw_circle(int posX, int posY, int rad, int color, struct frame* frame) {
-    for (int y=posY;y<posY+rad;y++) {
-        for (int x=posX;x<posX+rad;x++) {
-
-            if (int_distance(x, y, posX+rad/2, posY+rad/2) >= rad/2 || x+frame->width*y < 0) 
+void draw_circle(struct vector2 pos, int rad, int color, struct frame* frame) {
+    for (int y=pos.y;y<pos.y+rad;y++) {
+        for (int x=pos.x;x<pos.x+rad;x++) {
+            if (int_distance(x, y, pos.x+rad/2, pos.y+rad/2) >= rad/2 || x+frame->width*y < 0) 
                 continue;
 
             frame->pixels[(x+frame->width*y)%(frame->width*frame->height)] = color;
@@ -104,10 +112,10 @@ void draw_circle(int posX, int posY, int rad, int color, struct frame* frame) {
     }
 }
 
-void draw_center_circle(int posX, int posY, int rad, int color, struct frame* frame) {
-    for (int y=posY-rad;y<posY+rad;y++) {
-        for (int x=posX-rad;x<posX+rad;x++) {
-            if (int_distance(x, y, posX, posY) >= rad/2 || x+frame->width*y < 0) 
+void draw_center_circle(struct vector2 pos, int rad, int color, struct frame* frame) {
+    for (int y=pos.y-rad;y<pos.y+rad;y++) {
+        for (int x=pos.x-rad;x<pos.x+rad;x++) {
+            if (int_distance(x, y, pos.x, pos.y) >= rad/2 || x+frame->width*y < 0 || frame->width == 0 || frame->height == 0) 
                 continue;
 
             frame->pixels[(x+frame->width*y)%(frame->width*frame->height)] = color;
@@ -115,7 +123,7 @@ void draw_center_circle(int posX, int posY, int rad, int color, struct frame* fr
     }
 }
 
-void draw_pi_circle(int posX, int posY, int rad, int color, struct frame* frame) {
+void draw_pi_circle(struct vector2 pos, int rad, int color, struct frame* frame) {
     static const double PI = 3.1415926535;
     double i, angle, x1, y1;
 
@@ -125,20 +133,21 @@ void draw_pi_circle(int posX, int posY, int rad, int color, struct frame* frame)
         x1 = rad * cos(angle * PI / 180);
         y1 = rad * sin(angle * PI / 180);
 
-        frame->pixels[(int)((posX + x1)*((posY+y1)*frame->width))%(frame->width*frame->height)] = color;
+        frame->pixels[(int)((pos.x + x1)*((pos.y+y1)*frame->width))%(frame->width*frame->height)] = color;
     }
 }
 
-void draw_line(int x1, int y1, int x2, int y2, int width, int color, struct frame* frame) {
+void draw_line(struct vector2 start_point, struct vector2 end_point, int width, int color, struct frame* frame) {
+
 
     
     /* Calculate Lines*/
-    int left = min(x1, x2);
-    int right = max(x1, x2);
-    int bottom = min(y1, y2);
-    int top = max(y1, y2);
+    int left = min(start_point.x, end_point.x);
+    int right = max(start_point.x, end_point.x);
+    int bottom = min(start_point.y, end_point.y);
+    int top = max(start_point.y, end_point.y);
     float function = (float)(top-bottom)/(float)(right-left);
-    int sign = getDirection(x1, y1, x2, y2);
+    int sign = get_direction(start_point, end_point);
     int manipulateX = (left == right) ? 0 : 1;
 
     #pragma region 
@@ -181,41 +190,28 @@ void draw_line(int x1, int y1, int x2, int y2, int width, int color, struct fram
         } 
     }
     /* Draw circles on end-points */
-    draw_center_circle(x1, y1, width, color, frame);
-    draw_center_circle(x2, y2, width, color, frame);
+    draw_center_circle(start_point, width, color, frame);
+    draw_center_circle(end_point, width, color, frame);
 }
 
-int getDirection(float x1, float y1, float x2, float y2) {
-    if (x1 == x2 || y1 == y2) 
-        return 1;
-
-    if (y2 > y1) {
-        return (x2 > x1) ? 1 : -1;
-    }
-    else {
-        return (x2 > x1) ? -1 : 1;
-    }
+void wash_machine(struct vector2 fix_point, struct vector2* spin_vector, int rad, float time) {
+    spin_vector->x = fix_point.x + cosf(time) * rad;
+    spin_vector->y = fix_point.y + sinf(time) * rad; //+ sinf(time) * rad;
 }
 
-void IntSpinner(int fixPoint_x, int fixPoint_y, int *spinX, int *spinY, int rad, float time) {
+void draw_cube(struct vector2 pos, struct vector2 size, int linewidth, int color, struct frame* frame) {
 
-    *spinX = fixPoint_x + cosf(time) * rad;
-    *spinY = fixPoint_y + sinf(time) * rad; //+ sinf(time) * rad;
-}
+    draw_line(vector2(pos.x, pos.y),          vector2(pos.x+size.x, pos.y),          linewidth, color, frame);
+    draw_line(vector2(pos.x, pos.y),          vector2(pos.x, pos.y+size.y),          linewidth, color, frame);
+    draw_line(vector2(pos.x+size.x, pos.y),   vector2(pos.x+size.x, pos.y+size.y),   linewidth, color, frame);
+    draw_line(vector2(pos.x, pos.y+size.y),   vector2(pos.x+size.x, pos.y+size.y),   linewidth, color, frame);
 
-void draw_cube(int posX, int posY, int width, int height, int linewidth, int color, struct frame* frame) {
+    draw_line(vector2(pos.x+size.x, pos.y),         vector2(pos.x+size.x+size.x/2, pos.y+size.y/2),          linewidth, color, frame);
+    draw_line(vector2(pos.x+size.x, pos.y+size.y),  vector2(pos.x+size.x+size.x/2, pos.y+size.y+size.y/2),   linewidth, color, frame);
+    draw_line(vector2(pos.x, pos.y+size.y),         vector2(pos.x+size.x/2, pos.y+size.y+size.y/2),          linewidth, color, frame);
 
-    draw_line(posX, posY, posX + width, posY, linewidth, color, frame);
-    draw_line(posX, posY, posX, posY + height, linewidth, color, frame);
-    draw_line(posX + width, posY, posX + width, posY + height, linewidth, color, frame);
-    draw_line(posX, posY + height, posX + width, posY + height, linewidth, color, frame);
-
-    draw_line(posX+width, posY, posX+width+width/2, posY+height/2, linewidth, color, frame);
-    draw_line(posX+width, posY+height, posX+width+width/2, posY+height+height/2, linewidth, color, frame);
-    draw_line(posX, posY+height, posX+width/2, posY+height+height/2, linewidth, color, frame);
-
-    draw_line(posX+width/2, posY+height+height/2, posX+width+width/2, posY+height+height/2, linewidth, color, frame);
-    draw_line(posX+width+width/2, posY+height/2, posX+width+width/2, posY+height+height/2, linewidth, color, frame);
+    draw_line(vector2(pos.x+size.x/2, pos.y+size.y+size.y/2),   vector2(pos.x+size.x+size.x/2, pos.y+size.y+size.y/2),   linewidth, color, frame);
+    draw_line(vector2(pos.x+size.x+size.x/2, pos.y+size.y/2),   vector2(pos.x+size.x+size.x/2, pos.y+size.y+size.y/2),   linewidth, color, frame);
 }
 
 void print_pointer(struct frame *frame) {
@@ -239,11 +235,52 @@ void db_map_level(struct level* level, struct frame* debug) {
 
             if (level->objects[i][j].type == EMPTY) continue;
 
-            draw_rectangle_wireframe_filled(x, y, sqr_size, sqr_size, 3, 0xFFFFFF, debug);
+            draw_rectangle_wireframe_filled(vector2(x, y), vector2(sqr_size, sqr_size), 3, 0xFFFFFF, debug);
         }
     }
 }
 
-void mn_map_level() {
+void mn_map_level(struct level* level, struct frame* frame) {
 
+}
+
+
+/* PLAYER */
+void draw_player(struct player* player, struct frame* frame) {
+    draw_center_circle(player->pos, 50, 0xFF0000, frame);
+
+
+    struct vector2 range = {0, 0};
+    double turn_speed = 100;
+
+    range.x = frame->width - (cosf(player->angle)*player->pos.x);
+    range.y = 0;
+
+    struct vector2 normalized_look_vector = normalize_vector(vector2(cosf(player->angle)*turn_speed, sinf(player->angle)*turn_speed));
+
+    draw_line(player->pos, add_vector2(player->pos, multiply_vector2(normalized_look_vector, magnitude(range))), 10, 0xFF0000, frame);
+    // printf("(%f, %f)\n", look_vector.x, look_vector.y);
+    // printf("(%f, %f)\n", normalize_vector(look_vector).x, normalize_vector(look_vector).y);
+}
+
+
+
+
+
+
+
+
+
+
+/* OTHER METHODS */
+int get_direction(struct vector2 point1, struct vector2 point2) {
+    if (point1.x == point2.x || point1.y == point2.y) 
+        return 1;
+
+    if (point2.y > point1.y) {
+        return (point2.x > point1.x) ? 1 : -1;
+    }
+    else {
+        return (point2.x > point1.x) ? -1 : 1;
+    }
 }

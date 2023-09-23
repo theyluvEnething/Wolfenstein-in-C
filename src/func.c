@@ -15,19 +15,28 @@ void print_endl() {
   printf("\n");
 }
 
-void print_warning(const char* message) {
+void print_info(const char* message, ...) {
+    va_list args;
+    va_start(args, message);
+    printf(ANSI_COLOR_MAGENTA "[INFO] " ANSI_COLOR_RESET);
+    vprintf(message, args);
+    va_end(args);
+}
+void print_warning(const char* message, ...) {
+    va_list args;
+    va_start(args, message);
     printf(ANSI_COLOR_YELLOW "[WARNING] " ANSI_COLOR_RESET);
-    for (int i = 0; message[i] != '\0'; i++) {
-        printf("%c", message[i]);
-    }
+    vprintf(message, args);
+    va_end(args);
+}
+void print_error(const char* message, ...) {
+    va_list args;
+    va_start(args, message);
+    printf(ANSI_COLOR_RED "[ERROR] " ANSI_COLOR_RESET);
+    vprintf(message, args);
+    va_end(args);
 }
 
-void print_error(const char* message) {
-    printf(ANSI_COLOR_RED "[ERROR] " ANSI_COLOR_RESET);
-    for (int i = 0; message[i] != '\0'; i++) {
-      printf("%c", message[i]);
-    }
-}
 
 
 /* float */

@@ -76,7 +76,8 @@
     "vector2.h": "c",
     "array": "c",
     "system_error": "c",
-    "player.h": "c"
+    "player.h": "c",
+    "*.tcc": "c"
   },
   "C_Cpp.errorSquiggles": "disabled"
 }

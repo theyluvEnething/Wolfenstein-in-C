@@ -1,10 +1,8 @@
 #ifndef INPUT_H
 #define INPUT_H
 
-void HandlePlayerInput(const char input) {
-    if (input == 'W') {
-        
-    }
-}
+#include "player.h"
+
+void HandlePlayerInput(const char input, struct player* player);
 
 #endif

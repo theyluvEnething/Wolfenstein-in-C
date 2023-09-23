@@ -8,6 +8,7 @@
 #include "headers/func.h"
 #include "headers/vector2.h"
 #include "headers/player.h"
+#include "headers/input.h"
 
 /* FRAME */
 struct frame frame = {0};
@@ -51,17 +52,22 @@ static HBITMAP debug_bitmap = 0;
 static HDC debug_device_context = 0;
 
 
-
-const int game_window_width = 1080;
-const int game_window_height = 720;
-
-const int debug_window_width = 800;
-const int debug_window_height = 500;
+/* WINDOW */
+const int game_window_width = 1080; const int game_window_height = 720;
+const int debug_window_width = 800; const int debug_window_height = 500;
 
 
-static bool r_game_wnd = true;
-static bool r_debug_wnd = true;
+static bool mn_wnd_running = true; static bool mn_wnd_minimized = false;
+static bool db_wnd_running = true; static bool db_wnd_minimized = false;
 
+
+void Initialize() {
+    player.pos.x = 150; 
+    player.pos.y = 180;
+    player.angle = 0.0;
+    player.health = 100;
+    print_info("Player: %p\n", &player);
+}
 
 
 
@@ -71,6 +77,8 @@ int WINAPI WinMain(HINSTANCE hInstance,
                    int showCmd) 
 {
     printf("\n=========================================\n");
+
+    Initialize();
 
     float mn_ratio = game_window_width / (float)game_window_height;
     float db_ratio = debug_window_width / (float)debug_window_height;
@@ -99,22 +107,6 @@ int WINAPI WinMain(HINSTANCE hInstance,
     int reg1 = RegisterClass(&debug_wnd_class);
 
     printf("GameWndClass: %i, DebugWndClass: %i\n", reg0, reg1);
-
-    // if (reg0 == 0) {
-    //     // Registration failed
-    //     DWORD error = GetLastError();
-    //     printf("game winddow class failed %d\n", error);
-    //     // You can add additional error handling or exit the program.
-    //     return 1;
-    // }
-
-    // if (reg1 == 0) {
-    //     // Registration failed
-    //     DWORD error = GetLastError();
-    //     printf("debug winddow class failed %d\n", error);
-    //     // You can add additional error handling or exit the program.
-    //     return 1;
-    // }
 
     frame_bitmap_info.bmiHeader.biSize = sizeof(frame_bitmap_info.bmiHeader);
     frame_bitmap_info.bmiHeader.biPlanes = 1;
@@ -156,7 +148,7 @@ int WINAPI WinMain(HINSTANCE hInstance,
     // ADD ONE TO ARRAY FOR NULL TERMINATOR
     char* mapArr[6] = {"###########",
                        "#---------#",
-                       "#---------#",
+                       "#----###--#",
                        "#---------#",
                        "###########"};
 
@@ -177,10 +169,10 @@ int WINAPI WinMain(HINSTANCE hInstance,
     static float deltaTime = 0;
 
     /* level */
-    while (r_game_wnd || r_debug_wnd) 
+    while (mn_wnd_running || db_wnd_running) 
     {
 		static MSG message = { 0 };
-		while(PeekMessage(&message, NULL, 0, 0, PM_REMOVE)) { DispatchMessage(&message); }
+		while(PeekMessage(&message, NULL, 0, 0, PM_REMOVE)) { DispatchMessage(&message); }        
 
         static int keyboard_x = 0, keyboard_y = 0;
         if(keyboard[VK_RIGHT] || keyboard['D']) ++keyboard_x;
@@ -194,35 +186,42 @@ int WINAPI WinMain(HINSTANCE hInstance,
 		if(keyboard_y > frame.height-1)	keyboard_y = frame.height-1;
 
 
-        background(0xFF00FF, &frame);
-        background(0x000000, &debug);
-        frame.pixels[keyboard_x + keyboard_y*frame.width] = 0x00ffffff;
+        x1 = mouse.x;
+        y1 = mouse.y;
 
-        db_map_level(&level, &debug);
-        //draw_center_circle(level.obstacles[0][0].x, level.obstacles[0][0].y, 5, 0xFFFFFF, &debug);
-        draw_center_circle(50, 0, 100, 0xFFFFFF, &frame);
+        /* MAIN WINDOW */
+        if (!is_minimized(&frame)) {
+            background(0xFF00FF, &frame);
 
-       // draw_center_circle(250, 250, 50, 0xFFFFFF, &debug);
-        draw_rectangle_wireframe(300, 300, 100, 100, 5, 0xFFFFF, &frame);
+            draw_center_circle(vector2(500, 300), 100, 0xFFFFFF, &frame);
+            draw_rectangle_wireframe(vector2(300, 300), vector2(100, 100), 5, 0xFFFFF, &frame);
 
-        draw_line(5, 5, 500, 5, 15, 0xFFFFFF, &frame);
+            struct vector2 temp = vector2(x2, y2);
+
+            draw_line(vector2(x1, y1), vector2(temp.x, temp.y), 5, 0xFFFFFF, &frame);
+            draw_line(vector2(x1, y2), vector2(temp.x, y1), 5, 0xFFFFFF, &frame);
+            draw_line(vector2(x1, y1), vector2(x1, temp.y), 5, 0xFFFFFF, &frame);
+            draw_line(vector2(x2, y1), vector2(temp.x, temp.y), 5, 0xFFFFFF, &frame);
+            draw_line(vector2(x1, y2), vector2(temp.x, temp.y), 5, 0xFFFFFF, &frame);
+            draw_line(vector2(x1, y1), vector2(temp.x, y1), 5, 0xFFFFFF, &frame);
+            wash_machine(vector2(x1, y1), &temp, 200, deltaTime);
+            deltaTime += 0.02f;
+
+            draw_cube(vector2(300, 500), vector2(100, 100), 2, 0xFFFFF, &frame);
+
+            update_screen(&game_hwnd);
+        }
+        /* DEBUG WINDOW */
+        if (!is_minimized(&debug)) {
+            background(0x000000, &debug);
+            db_map_level(&level, &debug);
+
+            draw_player(&player, &debug);
 
 
-        draw_line(x1, y1, x2, y2, 5, 0xFFFFFF, &frame);
-        draw_line(x1, y2, x2, y1, 5, 0xFFFFFF, &frame);
-        draw_line(x1, x1, x2, y1, 5, 0xFFFFFF, &frame);
-        draw_line(x1, y2, x2, y2, 5, 0xFFFFFF, &frame);
-        draw_line(x1, y1, x1, y2, 5, 0xFFFFFF, &frame);
-        draw_line(x2, y1, x2, y2, 5, 0xFFFFFF, &frame);
-        draw_cube(300, 500, 100, 100, 2, 0xFFFFF, &frame);
-        IntSpinner(x1, y1, &x2, &y2, 200, deltaTime);
-        deltaTime += 0.02f;
 
-
-
-
-        update_screen(&debug_hwnd);
-        update_screen(&game_hwnd);
+            update_screen(&debug_hwnd);
+        }
     }
 
     /* UPDATE RENDER */
@@ -230,6 +229,10 @@ int WINAPI WinMain(HINSTANCE hInstance,
     printf("=========================================\n");
     PostQuitMessage(0);
     return 0;
+}
+
+static void InputCollection(const char input) {
+    HandlePlayerInput(input, &player);
 }
 
 LRESULT CALLBACK GameWindowProc(HWND hwnd, 
@@ -271,8 +274,8 @@ LRESULT CALLBACK GameWindowProc(HWND hwnd,
          /* IDK (Close..?) */
         case WM_DESTROY:
         {
-            r_game_wnd = false;
-            r_debug_wnd = false;
+            mn_wnd_running = false;
+            db_wnd_running = false;
             //PostQuitMessage(0);
             return 0;
         } break;     
@@ -280,11 +283,13 @@ LRESULT CALLBACK GameWindowProc(HWND hwnd,
         case WM_SETFOCUS: has_focus = true; break;
 
         case WM_KILLFOCUS: {
+            printf("Debug Window is now in focus.\n");
 			has_focus = false;
 			memset(keyboard, 0, 256 * sizeof(keyboard[0]));
 			mouse.buttons = 0;
 		} break;
 
+        /* KEYBOARD */
         case WM_SYSKEYDOWN:
 		case WM_KEYDOWN:
         {
@@ -294,17 +299,47 @@ LRESULT CALLBACK GameWindowProc(HWND hwnd,
             static bool key_is_down, key_was_down;
             key_is_down  = ((lParam & (1 << 31)) == 0);
             key_was_down = ((lParam & (1 << 30)) != 0);
-
             keyboard[(uint8_t)wParam] = key_is_down;
-            printf("%c", (char)(uint8_t)wParam);
-            if(!key_is_down)
-                break;
+            InputCollection((uint8_t)wParam);
+            printf("%c", (uint8_t)wParam);
 
             switch(wParam) 
             {
-                case VK_ESCAPE: r_game_wnd = false; r_debug_wnd = false; break;
+                case VK_ESCAPE: 
+                    mn_wnd_running = false; 
+                    db_wnd_running = false;
+                    PostQuitMessage(0);
+                break;  
             }
         } break;
+
+        /* MOUSE */
+        case WM_MOUSEMOVE: {
+			mouse.x = LOWORD(lParam);
+			mouse.y = frame.height - 1 - HIWORD(lParam);
+		} break;
+
+		case WM_LBUTTONDOWN: mouse.buttons |=  MOUSE_LEFT;   break;
+		case WM_LBUTTONUP:   mouse.buttons &= ~MOUSE_LEFT;   break;
+		case WM_MBUTTONDOWN: mouse.buttons |=  MOUSE_MIDDLE; break;
+		case WM_MBUTTONUP:   mouse.buttons &= ~MOUSE_MIDDLE; break;
+		case WM_RBUTTONDOWN: mouse.buttons |=  MOUSE_RIGHT;  break;
+		case WM_RBUTTONUP:   mouse.buttons &= ~MOUSE_RIGHT;  break;
+
+		case WM_XBUTTONDOWN: {
+			if(LOWORD(wParam) == XBUTTON1) {
+					 mouse.buttons |= MOUSE_X1;
+			} else { mouse.buttons |= MOUSE_X2; }
+		} break;
+		case WM_XBUTTONUP: {
+			if(LOWORD(wParam) == XBUTTON1) {
+					 mouse.buttons &= ~MOUSE_X1;
+			} else { mouse.buttons &= ~MOUSE_X2; }
+		} break;
+
+		case WM_MOUSEWHEEL: {
+			printf("%s\n", wParam & 0b10000000000000000000000000000000 ? "Down" : "Up");
+		} break;
 
          /* DEFAULT */
         default: {
@@ -353,7 +388,7 @@ LRESULT CALLBACK DebugWindowProc(HWND hwnd,
          /* IDK (Close..?) */
         case WM_DESTROY:
         {
-            r_debug_wnd = false;
+            db_wnd_running = false;
             //PostQuitMessage(0);
             return 0;
         } break;     
@@ -361,31 +396,68 @@ LRESULT CALLBACK DebugWindowProc(HWND hwnd,
         case WM_SETFOCUS: has_focus = true; break;
 
         case WM_KILLFOCUS: {
+            printf("Main Window is now in focus.\n");
 			has_focus = false;
 			memset(keyboard, 0, 256 * sizeof(keyboard[0]));
 			mouse.buttons = 0;
 		} break;
 
+        
+
+        /* KEYBOARD */
         case WM_SYSKEYDOWN:
 		case WM_KEYDOWN:
         {
 			if (!has_focus)
                 break;
-                
+
             static bool key_is_down, key_was_down;
             key_is_down  = ((lParam & (1 << 31)) == 0);
             key_was_down = ((lParam & (1 << 30)) != 0);
-
             keyboard[(uint8_t)wParam] = key_is_down;
-            printf("%c", (char)(uint8_t)wParam);
-            if(!key_is_down)
-                break;
+            InputCollection((uint8_t)wParam);
+            printf("%c", (uint8_t)wParam);
 
             switch(wParam) 
             {
-                case VK_ESCAPE: r_game_wnd = false; r_debug_wnd = false; break;
+                case VK_ESCAPE: 
+                    mn_wnd_running = false; 
+                    db_wnd_running = false;
+                break;  
             }
         } break;
+
+
+        /* MOUSE */
+        /*
+        case WM_MOUSEMOVE: {
+			mouse.x = LOWORD(lParam);
+			mouse.y = frame.height - 1 - HIWORD(lParam);
+		} break;
+
+		case WM_LBUTTONDOWN: mouse.buttons |=  MOUSE_LEFT;   break;
+		case WM_LBUTTONUP:   mouse.buttons &= ~MOUSE_LEFT;   break;
+		case WM_MBUTTONDOWN: mouse.buttons |=  MOUSE_MIDDLE; break;
+		case WM_MBUTTONUP:   mouse.buttons &= ~MOUSE_MIDDLE; break;
+		case WM_RBUTTONDOWN: mouse.buttons |=  MOUSE_RIGHT;  break;
+		case WM_RBUTTONUP:   mouse.buttons &= ~MOUSE_RIGHT;  break;
+
+		case WM_XBUTTONDOWN: {
+			if(LOWORD(wParam) == XBUTTON1) {
+					 mouse.buttons |= MOUSE_X1;
+			} else { mouse.buttons |= MOUSE_X2; }
+		} break;
+		case WM_XBUTTONUP: {
+			if(LOWORD(wParam) == XBUTTON1) {
+					 mouse.buttons &= ~MOUSE_X1;
+			} else { mouse.buttons &= ~MOUSE_X2; }
+		} break;
+
+		case WM_MOUSEWHEEL: {
+			printf("%s\n", wParam & 0b10000000000000000000000000000000 ? "Down" : "Up");
+		} break;
+
+        */
 
          /* DEFAULT */
         default: {

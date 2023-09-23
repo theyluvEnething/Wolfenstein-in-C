@@ -20,7 +20,7 @@ void init_map(char** map, struct level* level) {
 
     printf("\nInitializing Obstacles!\n");
     /* INITIALIZE OBSTACLE ARRAY */
-    level->objects = (struct object**)calloc((cols-1), sizeof(struct object*));
+    level->objects = (struct object**)calloc((cols), sizeof(struct object*));
     for (int i = 0; i <= cols; i++) {
         level->objects[i] = (struct object*)calloc((rows), sizeof(struct object));
         if (level->objects[i] == NULL) {

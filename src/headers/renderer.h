@@ -6,36 +6,43 @@
 #include <stdbool.h>
 #include "frame.h"
 #include "level.h"
+#include "player.h"
+
 
 /* TO-DO:
 
 - OPTIMISE LINE RENDERER BY NOT DRAWING OVER ALREADY DRAWN PIXELS 
-
+1
 
 */
 
 void update_screen();
 void background(int color, struct frame* frame);
-void draw_pixel(int posX, int posY, int color, struct frame* frame);
+void draw_pixel(struct vector2 pos, int color, struct frame* frame);
+bool is_minimized(struct frame* frame);
 
 /* FORMS */
-void draw_rectangle(int posX, int posY, int width, int height, int color, struct frame* frame);
-void draw_circle(int posX, int posY, int rad, int color, struct frame* frame);
-void draw_center_circle(int posX, int posY, int rad, int color, struct frame* frame);
-void draw_pi_circle(int posX, int posY, int rad, int color, struct frame* frame);
-void draw_line(int x1, int y1, int x2, int y2, int width, int color, struct frame* frame);
+void draw_rectangle(struct vector2 pos, struct vector2 size, int color, struct frame* frame);
+void draw_circle(struct vector2 pos, int rad, int color, struct frame* frame);
+void draw_center_circle(struct vector2 pos, int rad, int color, struct frame* frame);
+void draw_pi_circle(struct vector2 pos, int rad, int color, struct frame* frame);
+void draw_line(struct vector2 start_point, struct vector2 end_point, int width, int color, struct frame* frame);
 
 /* WIREFRAME */
-void draw_rectangle_wireframe(int posX, int posY, int width, int height, int line_width, int color, struct frame* frame);
-void draw_rectangle_wireframe_filled(int posX, int posY, int width, int height, int line_width, int color, struct frame* frame);
+void draw_rectangle_wireframe(struct vector2 pos, struct vector2 size, int line_width, int color, struct frame* frame);
+void draw_rectangle_wireframe_filled(struct vector2 pos, struct vector2 size, int line_width, int color, struct frame* frame);
 
 
 /* 3D */
-void draw_cube(int posX, int posY, int width, int height, int linewidth, int color, struct frame* frame);
+void draw_cube(struct vector2 pos, struct vector2 size, int linewidth, int color, struct frame* frame);
 
 void print_pointer(struct frame* frame);
-void IntSpinner(int fixPoint_x, int fixPoint_y, int *spinX, int *spinY, int rad, float time);
+void wash_machine(struct vector2 fix_point, struct vector2* spin_vector, int rad, float time);
 
 void db_map_level(struct level* level, struct frame* debug);
+void mn_map_level(struct level* level, struct frame* frame);
+
+/* PlAYER */
+void draw_player(struct player* player, struct frame* frame);
 
 #endif
