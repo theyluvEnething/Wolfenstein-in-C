@@ -124,7 +124,6 @@ void draw_center_circle(struct vector2 pos, int rad, int color, struct frame* fr
 }
 
 void draw_pi_circle(struct vector2 pos, int rad, int color, struct frame* frame) {
-    static const double PI = 3.1415926535;
     double i, angle, x1, y1;
 
     for (i = 0; i < 360; i += 0.1)
@@ -251,14 +250,88 @@ void draw_player(struct player* player, struct frame* frame) {
 
 
     struct vector2 range = {0, 0};
-    double turn_speed = 100;
+    double turn_speed = 25;
 
-    range.x = frame->width - (cosf(player->angle)*player->pos.x);
-    range.y = 0;
 
-    struct vector2 normalized_look_vector = normalize_vector(vector2(cosf(player->angle)*turn_speed, sinf(player->angle)*turn_speed));
+    double look_angle = player->angle * turn_speed;
+    double change_angle = atan((frame->height-player->pos.y)/(frame->width-player->pos.x));
+    draw_line(player->pos, vector2(frame->width, frame->height), 3, 0xFF0000, frame);
+    draw_line(player->pos, vector2(frame->width, player->pos.y), 3, 0xFF0000, frame);
+    draw_line(player->pos, vector2(player->pos.x, frame->height), 3, 0xFF0000, frame);
+    printf("(%1.f, %1.f) - ", (frame->width-player->pos.x), (frame->height-player->pos.y));
+    printf("Angle: %.2f | ", change_angle);//*(180/PI));
+    printf("Look Angle: %.2f | ", look_angle);//*(180/PI));
 
-    draw_line(player->pos, add_vector2(player->pos, multiply_vector2(normalized_look_vector, magnitude(range))), 10, 0xFF0000, frame);
+    if (look_angle >= 2*PI-0.025 || look_angle <= -2*PI+0.025) player->angle = 0;
+
+    if (float_abs(look_angle) <= change_angle && float_abs(look_angle) >= change_angle-PI/2) { 
+        range.x = (frame->width-player->pos.x);
+        range.y = (look_angle)* (frame->width-player->pos.x);
+
+        float y_l = tan(look_angle) * (frame->width-player->pos.x);
+        float x_l = cosf(look_angle) >= 0 ? (frame->width-player->pos.x) : 0;
+        printf(" cos: %.2f ", cosf(look_angle));
+        draw_line(player->pos, vector2(player->pos.x+x_l, player->pos.y), 5, 0xFFFFF, frame);
+        draw_line(player->pos, vector2(player->pos.x, player->pos.y+y_l), 5, 0xFFFFF, frame);
+
+    } 
+    else if (float_abs(look_angle) > change_angle && float_abs(look_angle) <= change_angle+PI/2) {
+        range.x = (1/tan(look_angle)) * (frame->height-player->pos.y);
+        range.y = (frame->height-player->pos.y); 
+
+        float x_l = (1/tan(look_angle)) * (frame->height-player->pos.y);
+        float y_l = (frame->height-player->pos.y);
+        draw_line(player->pos, vector2(player->pos.x+x_l, player->pos.y), 5, 0xFFFFF, frame);
+        draw_line(player->pos, vector2(player->pos.x, player->pos.y+y_l), 5, 0xFFFFF, frame);
+    }
+    // else if (float_abs(look_angle) >= change_angle+PI/2 && float_abs(look_angle) < change_angle+PI) {
+    //     range.x = (1/tan(look_angle)) * (frame->height-player->pos.y);
+    //     range.y = (frame->height-player->pos.y); 
+
+    //     float x_l = (1/tan(look_angle)) * (frame->height-player->pos.y);
+    //     float y_l = (frame->height-player->pos.y);
+    //     draw_line(player->pos, vector2(player->pos.x+x_l, player->pos.y), 5, 0xFFFFF, frame);
+    //     draw_line(player->pos, vector2(player->pos.x, player->pos.y+y_l), 5, 0xFFFFF, frame);
+    // }
+    // else if (float_abs(look_angle) > change_angle+PI && float_abs(look_angle) <= change_angle+(3*PI/2)) {
+    //     range.x = (1/tan(look_angle)) * (frame->height-player->pos.y);
+    //     range.y = (frame->height-player->pos.y); 
+
+    //     float x_l = (1/tan(look_angle)) * (frame->height-player->pos.y);
+    //     float y_l = (frame->height-player->pos.y);
+    //     draw_line(player->pos, vector2(player->pos.x+x_l, player->pos.y), 5, 0xFFFFF, frame);
+    //     draw_line(player->pos, vector2(player->pos.x, player->pos.y+y_l), 5, 0xFFFFF, frame);
+    // }
+
+
+
+
+    printf("\n");
+    // printf("%.2f", sinf(angle));
+    // if (angle <= change_angle) {
+        
+    //     printf("Angle less than 45 Degress.\n");
+    //     while(range.x < (frame->width-player->pos.x)) {
+    //         range.x++;
+    //     }
+    //     while(range.y < sinf(angle)*(frame->height-player->pos.y)) {
+    //         range.y++;
+    //     }
+    // } else {
+    //     printf("Angle more than 45 Degress.;\n");
+    //     while(range.x < cosf(angle)*(frame->width-player->pos.x)) {
+    //         range.x++;
+    //     }
+    //     while(range.y < (frame->height-player->pos.y)) {
+    //         range.y++;
+    //     }
+    // }
+
+    // printf("%f\n", angle);
+    // printf("Range: (%.1f | %.1f), Range: %.1f\n", range.x, range.y, magnitude(range));
+
+    struct vector2 normalized_look_vector = normalize_vector(vector2(cosf(look_angle), sinf(look_angle)));
+    draw_line(player->pos, add_vector2(player->pos, multiply_vector2(normalized_look_vector, magnitude(range))), 3, 0xFF00FF, frame);
     // printf("(%f, %f)\n", look_vector.x, look_vector.y);
     // printf("(%f, %f)\n", normalize_vector(look_vector).x, normalize_vector(look_vector).y);
 }

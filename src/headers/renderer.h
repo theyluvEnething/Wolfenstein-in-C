@@ -8,6 +8,7 @@
 #include "level.h"
 #include "player.h"
 
+#define PI (3.14159265358979323846)
 
 /* TO-DO:
 

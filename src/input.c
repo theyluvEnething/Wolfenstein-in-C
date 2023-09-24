@@ -21,13 +21,13 @@ void HandlePlayerInput(const char input, struct player* player) {
 
         /* DIRECTION */
         case '%': {
-            player->angle += 0.03;
+            player->angle += 0.001;
             // printf("Look X: %f\n", (float)cosf(player->angle) * 100);
             // printf("Look Y: %f\n", (float)sinf(player->angle) * 100);
             printf("Turning Left: %f\n", player->angle);
         } break;
         case '\'': {
-            player->angle -= 0.03;
+            player->angle -= 0.001;
             // printf("Look X: %f\n", (float)cosf(player->angle) * 100);
             // printf("Look Y: %f\n", (float)sinf(player->angle) * 100);
             printf("Turning Right: %f\n", player->angle);

@@ -8,6 +8,8 @@ void print_warning(const char* message, ...);
 void print_error(const char* message, ...);
 void print_info(const char* message, ...);
 
+int sign(double x);
+
 float float_distance(int x1, int y1, int x2, int y2);
 float float_clamp(float d, float min, float max);
 float float_abs(float x);

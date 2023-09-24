@@ -74,3 +74,7 @@ int int_min(float a, float b) {
 int int_max(float a, float b) {
   return (a > b) ? a : b;
 }
+
+int sign(double x) {
+    return (x > 0) - (x < 0);
+}
