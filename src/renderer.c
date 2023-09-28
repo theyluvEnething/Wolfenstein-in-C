@@ -77,6 +77,27 @@ void draw_rectangle_wireframe(struct vector2 pos, struct vector2 size, int line_
     draw_line(vector2(right, bottom),   vector2(right, top),        line_width, color, frame);
 }
 
+void draw_rectangle_wireframe_point(struct vector2 start_point, struct vector2 end_point, int line_width, int color, struct frame* frame) {
+
+    int left = min(start_point.x, end_point.x);
+    int right = max(start_point.x, end_point.x);
+    int bottom = min(start_point.y, end_point.y);
+    int top = max(start_point.y, end_point.y);
+
+    #pragma region 
+    // printf("Height: %i\n", height);
+    // printf("Left: %i\n", left);
+    // printf("Right: %i\n", right);
+    // printf("Bottom: %i\n", bottom);
+    // printf("Top: %i\n\n", top);
+    #pragma endregion
+
+    draw_line(vector2(left, bottom),    vector2(right, bottom),     line_width, color, frame);
+    draw_line(vector2(left, top),       vector2(right, top),        line_width, color, frame);
+    draw_line(vector2(left, bottom),    vector2(left, top),         line_width, color, frame);
+    draw_line(vector2(right, bottom),   vector2(right, top),        line_width, color, frame);
+}
+
 void draw_rectangle_wireframe_filled(struct vector2 pos, struct vector2 size, int line_width, int color, struct frame* frame) {
 
     int left = (size.x >= 0) ? pos.x : pos.x + size.x;
@@ -229,12 +250,12 @@ void db_map_level(struct level* level, struct frame* debug) {
 
     for (int i = 0; i < level->height; i++) {
         for (int j = 0; j < level->width; j++) { 
-            int x = level->objects[i][j].pos.x * sqr_size;
-            int y = level->objects[i][j].pos.y * sqr_size;
+            int x = level->objects[i][j].pos.x * level->objects[i][j].size.x * sqr_size;
+            int y = level->objects[i][j].pos.y * level->objects[i][j].size.y * sqr_size;
 
             if (level->objects[i][j].type == EMPTY) continue;
-
-            draw_rectangle_wireframe_filled(vector2(x, y), vector2(sqr_size, sqr_size), 3, 0xFFFFFF, debug);
+            else if (level->objects[i][j].type == WALL) draw_rectangle_wireframe_filled(vector2(x, y), vector2(sqr_size, sqr_size), 3, 0xFFFFFF, debug);
+            else if (level->objects[i][j].type == SQUARE) draw_rectangle_wireframe(vector2(x, y), vector2(sqr_size, sqr_size), 3, 0xFFFFFF, debug);
         }
     }
 }
@@ -245,97 +266,108 @@ void mn_map_level(struct level* level, struct frame* frame) {
 
 
 /* PLAYER */
-void draw_player(struct player* player, struct frame* frame) {
-    draw_center_circle(player->pos, 50, 0xFF0000, frame);
+void draw_player(struct player* player, struct level* level, struct frame* frame) {
 
-
-    struct vector2 range = {0, 0};
-    double turn_speed = 25;
-
-
-    double look_angle = player->angle * turn_speed;
-    double change_angle = atan((frame->height-player->pos.y)/(frame->width-player->pos.x));
-    draw_line(player->pos, vector2(frame->width, frame->height), 3, 0xFF0000, frame);
-    draw_line(player->pos, vector2(frame->width, player->pos.y), 3, 0xFF0000, frame);
-    draw_line(player->pos, vector2(player->pos.x, frame->height), 3, 0xFF0000, frame);
-    printf("(%1.f, %1.f) - ", (frame->width-player->pos.x), (frame->height-player->pos.y));
-    printf("Angle: %.2f | ", change_angle);//*(180/PI));
-    printf("Look Angle: %.2f | ", look_angle);//*(180/PI));
-
-    if (look_angle >= 2*PI-0.025 || look_angle <= -2*PI+0.025) player->angle = 0;
-
-    if (float_abs(look_angle) <= change_angle && float_abs(look_angle) >= change_angle-PI/2) { 
-        range.x = (frame->width-player->pos.x);
-        range.y = (look_angle)* (frame->width-player->pos.x);
-
-        float y_l = tan(look_angle) * (frame->width-player->pos.x);
-        float x_l = cosf(look_angle) >= 0 ? (frame->width-player->pos.x) : 0;
-        printf(" cos: %.2f ", cosf(look_angle));
-        draw_line(player->pos, vector2(player->pos.x+x_l, player->pos.y), 5, 0xFFFFF, frame);
-        draw_line(player->pos, vector2(player->pos.x, player->pos.y+y_l), 5, 0xFFFFF, frame);
-
-    } 
-    else if (float_abs(look_angle) > change_angle && float_abs(look_angle) <= change_angle+PI/2) {
-        range.x = (1/tan(look_angle)) * (frame->height-player->pos.y);
-        range.y = (frame->height-player->pos.y); 
-
-        float x_l = (1/tan(look_angle)) * (frame->height-player->pos.y);
-        float y_l = (frame->height-player->pos.y);
-        draw_line(player->pos, vector2(player->pos.x+x_l, player->pos.y), 5, 0xFFFFF, frame);
-        draw_line(player->pos, vector2(player->pos.x, player->pos.y+y_l), 5, 0xFFFFF, frame);
-    }
-    // else if (float_abs(look_angle) >= change_angle+PI/2 && float_abs(look_angle) < change_angle+PI) {
-    //     range.x = (1/tan(look_angle)) * (frame->height-player->pos.y);
-    //     range.y = (frame->height-player->pos.y); 
-
-    //     float x_l = (1/tan(look_angle)) * (frame->height-player->pos.y);
-    //     float y_l = (frame->height-player->pos.y);
-    //     draw_line(player->pos, vector2(player->pos.x+x_l, player->pos.y), 5, 0xFFFFF, frame);
-    //     draw_line(player->pos, vector2(player->pos.x, player->pos.y+y_l), 5, 0xFFFFF, frame);
-    // }
-    // else if (float_abs(look_angle) > change_angle+PI && float_abs(look_angle) <= change_angle+(3*PI/2)) {
-    //     range.x = (1/tan(look_angle)) * (frame->height-player->pos.y);
-    //     range.y = (frame->height-player->pos.y); 
-
-    //     float x_l = (1/tan(look_angle)) * (frame->height-player->pos.y);
-    //     float y_l = (frame->height-player->pos.y);
-    //     draw_line(player->pos, vector2(player->pos.x+x_l, player->pos.y), 5, 0xFFFFF, frame);
-    //     draw_line(player->pos, vector2(player->pos.x, player->pos.y+y_l), 5, 0xFFFFF, frame);
-    // }
-
-
-
-
-    printf("\n");
-    // printf("%.2f", sinf(angle));
-    // if (angle <= change_angle) {
-        
-    //     printf("Angle less than 45 Degress.\n");
-    //     while(range.x < (frame->width-player->pos.x)) {
-    //         range.x++;
-    //     }
-    //     while(range.y < sinf(angle)*(frame->height-player->pos.y)) {
-    //         range.y++;
-    //     }
-    // } else {
-    //     printf("Angle more than 45 Degress.;\n");
-    //     while(range.x < cosf(angle)*(frame->width-player->pos.x)) {
-    //         range.x++;
-    //     }
-    //     while(range.y < (frame->height-player->pos.y)) {
-    //         range.y++;
-    //     }
-    // }
-
-    // printf("%f\n", angle);
-    // printf("Range: (%.1f | %.1f), Range: %.1f\n", range.x, range.y, magnitude(range));
-
-    struct vector2 normalized_look_vector = normalize_vector(vector2(cosf(look_angle), sinf(look_angle)));
-    draw_line(player->pos, add_vector2(player->pos, multiply_vector2(normalized_look_vector, magnitude(range))), 3, 0xFF00FF, frame);
-    // printf("(%f, %f)\n", look_vector.x, look_vector.y);
-    // printf("(%f, %f)\n", normalize_vector(look_vector).x, normalize_vector(look_vector).y);
+    //printf("%f, %f\n", pPos.x, pPos.y);
+    draw_center_circle(vector2(player->pos.x*frame->width, player->pos.y*frame->height), 10, 0xFF0000, frame);
+    raycast(player, level, frame);
 }
 
+void raycast(struct player* player, struct level* level, struct frame* frame) {
+
+    struct vector2 pPos = vector2(player->pos.x*frame->width, player->pos.y*frame->height);
+    int max_range = int_distance(0, 0, frame->width, frame->height);
+
+    float sqr_size = frame->width / (float)level->width;
+    struct vector2 pSqr;
+    pSqr.x = int_clamp(pPos.x/sqr_size, 0, level->width-1);
+    pSqr.y = int_clamp(pPos.y/sqr_size, 0, level->height-1);
+    
+    struct vector2 sqrDiff;
+
+    sqrDiff.x = sqr_size - (int)pPos.x % (int)sqr_size;
+    sqrDiff.y = sqr_size - (int)pPos.y % (int)sqr_size;
+
+    float d_x = 0;
+    float d_y = 0;
+    
+    printf("Player Square: (%.2f | %.2f) | ", pSqr.x, 5-pSqr.y);
+    printf("Square Diff: (%.2f | %.2f) | ", sqrDiff.x, sqrDiff.y);
+
+    printf("Sqr Start: (%.2f | %.2f) | ", pPos.x-(sqr_size-d_x), pPos.y-(sqr_size-d_y));
+    printf("Square End: (%.2f | %.2f) | ", pPos.x+d_x, pPos.y+d_y);
+
+    struct object checkObj = level->objects[(int)(5-pSqr.y)][(int)pSqr.x];
+    draw_rectangle_wireframe_point(vec2(pPos.x-(sqr_size-sqrDiff.x), pPos.y-(sqr_size-sqrDiff.y)), vec2(pPos.x+sqrDiff.x, pPos.y+sqrDiff.y), 5, 0x00FFFF, frame);
+
+    if (level->objects[(int)pSqr.y][(int)pSqr.x].type == '#') return;
+    
+    int total_calc = 0;
+    for (int i = -player->raycount/2; i <= player->raycount/2; i++) {
+        
+        //struct vector2 range = {0, 0};
+        int raycount = player->raycount % 2 == 0 ? player->raycount : player->raycount-1;
+        float angle_diff = i*(PI*(player->fov/(float)180)/(raycount)); 
+        double ray_angle = player->lookangle + angle_diff;
+        struct vector2 normalized_look_vector = normalize_vector(vector2(cosf(ray_angle), sinf(ray_angle)));
+
+
+
+        int range = 0;
+        while (range <= max_range) {
+
+            // FIX CRASH
+
+            struct vector2 grid;
+            grid.x = ((uint8_t)(add_vector2(pPos, multiply_vector2(normalized_look_vector, range)).x/sqr_size))%(level->width+1);
+            grid.y = ((uint8_t)(add_vector2(pPos, multiply_vector2(normalized_look_vector, range)).y/sqr_size))%(level->height+1);
+
+
+            /* INTERPOLATION METHOD */
+            // if (level->objects[(int)grid.y][(int)grid.x].type == '#') {                 
+            //     range -= sqr_size/8;
+              
+            //     while (level->objects[(int)grid.y][(int)grid.x].type == '#') {
+            //         grid.x = ((uint8_t)(add_vector2(pPos, multiply_vector2(normalized_look_vector, range)).x/sqr_size))%(level->width+1);
+            //         grid.y = ((uint8_t)(add_vector2(pPos, multiply_vector2(normalized_look_vector, range)).y/sqr_size))%(level->height+1);
+            //         range -= 1;
+            //         total_calc++;
+            //     }
+            //     while (level->objects[(int)grid.y][(int)grid.x].type != '#') {
+            //         grid.x = ((uint8_t)(add_vector2(pPos, multiply_vector2(normalized_look_vector, range)).x/sqr_size))%(level->width+1);
+            //         grid.y = ((uint8_t)(add_vector2(pPos, multiply_vector2(normalized_look_vector, range)).y/sqr_size))%(level->height+1);
+            //         range += 1;
+            //         total_calc++;
+            //     }
+            //     range -= 3;
+            //     break;
+            // }
+            // range+=1;
+
+            // MAKE BIG STEPS (AS BIG AS SQUARE-1) AND THEN ADD CORRECTION
+
+            /* CLEAN METHOD */
+            if (level->objects[(int)grid.y][(int)grid.x].type == '#') {
+                break;
+            } 
+            range+=1;
+            total_calc++;
+        }
+
+        draw_line(pPos, add_vector2(pPos, multiply_vector2(normalized_look_vector, range)), 1, 0xFF00FF, frame);
+
+        #pragma region 
+        // printf("Look Angle: %.2f | ", ray_angle);
+        // printf("Player Pos: (%1.f, %1.f) | ", pPos.x, pPos.y);
+        // printf("Look Point: (%1.f, %1.f) | ", add_vector2(player->pos, multiply_vector2(normalized_look_vector, magnitude(range))).x, add_vector2(player->pos, multiply_vector2(normalized_look_vector, magnitude(range))).y);
+        // printf(" cos: %.2f | sin: %.2f", cosf(ray_angle), sinf(ray_angle));
+        // printf("\n");
+        #pragma endregion
+    }
+
+    printf("Calc: %i", total_calc);
+    printf("\n");
+}
 
 
 

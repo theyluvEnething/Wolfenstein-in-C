@@ -77,7 +77,9 @@
     "array": "c",
     "system_error": "c",
     "player.h": "c",
-    "*.tcc": "c"
+    "*.tcc": "c",
+    "const.h": "c",
+    "input.h": "c"
   },
   "C_Cpp.errorSquiggles": "disabled"
 }

@@ -7,8 +7,7 @@
 #include "frame.h"
 #include "level.h"
 #include "player.h"
-
-#define PI (3.14159265358979323846)
+#include "const.h"
 
 /* TO-DO:
 
@@ -32,6 +31,8 @@ void draw_line(struct vector2 start_point, struct vector2 end_point, int width, 
 /* WIREFRAME */
 void draw_rectangle_wireframe(struct vector2 pos, struct vector2 size, int line_width, int color, struct frame* frame);
 void draw_rectangle_wireframe_filled(struct vector2 pos, struct vector2 size, int line_width, int color, struct frame* frame);
+void draw_rectangle_wireframe_point(struct vector2 start_point, struct vector2 end_point, int line_width, int color, struct frame* frame);
+
 
 
 /* 3D */
@@ -44,6 +45,7 @@ void db_map_level(struct level* level, struct frame* debug);
 void mn_map_level(struct level* level, struct frame* frame);
 
 /* PlAYER */
-void draw_player(struct player* player, struct frame* frame);
+void draw_player(struct player* player, struct level* level, struct frame* frame);
+void raycast(struct player* player, struct level* level, struct frame* frame);
 
 #endif

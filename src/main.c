@@ -9,6 +9,7 @@
 #include "headers/vector2.h"
 #include "headers/player.h"
 #include "headers/input.h"
+#include "headers/const.h"
 
 /* FRAME */
 struct frame frame = {0};
@@ -62,14 +63,16 @@ static bool db_wnd_running = true; static bool db_wnd_minimized = false;
 
 
 void Initialize() {
-    player.pos.x = 150; 
-    player.pos.y = 180;
-    player.angle = 0.0;
+    player.pos.x = 0.25; 
+    player.pos.y = 0.25;
+    player.lookangle = 0.0;
     player.health = 100;
+    player.fov = 80;
+    player.raycount = game_window_width/4;
+    int sensitivity = 5;
+    player.turnspeed = sensitivity * (PI/180);
     print_info("Player: %p\n", &player);
 }
-
-
 
 int WINAPI WinMain(HINSTANCE hInstance,
                    HINSTANCE pInstance, 
@@ -146,10 +149,11 @@ int WINAPI WinMain(HINSTANCE hInstance,
     /* GAME INIT */
     
     // ADD ONE TO ARRAY FOR NULL TERMINATOR
-    char* mapArr[6] = {"###########",
+    char* mapArr[7] = {"###########",
+                       "#----++---#",
                        "#---------#",
-                       "#----###--#",
-                       "#---------#",
+                       "#---###---#",
+                       "#---#-----#",
                        "###########"};
 
     init_map((char**)mapArr, &level);
@@ -191,7 +195,7 @@ int WINAPI WinMain(HINSTANCE hInstance,
 
         /* MAIN WINDOW */
         if (!is_minimized(&frame)) {
-            background(0xFF00FF, &frame);
+            background(0xFF0000, &frame);
 
             draw_center_circle(vector2(500, 300), 100, 0xFFFFFF, &frame);
             draw_rectangle_wireframe(vector2(300, 300), vector2(100, 100), 5, 0xFFFFF, &frame);
@@ -216,8 +220,7 @@ int WINAPI WinMain(HINSTANCE hInstance,
             background(0x000000, &debug);
             db_map_level(&level, &debug);
 
-            draw_player(&player, &debug);
-
+            draw_player(&player, &level, &debug);
 
 
             update_screen(&debug_hwnd);
@@ -232,6 +235,7 @@ int WINAPI WinMain(HINSTANCE hInstance,
 }
 
 static void InputCollection(const char input) {
+    printf("[%c | %i]\n", (uint8_t)input, (uint8_t)input);
     HandlePlayerInput(input, &player);
 }
 
@@ -301,7 +305,6 @@ LRESULT CALLBACK GameWindowProc(HWND hwnd,
             key_was_down = ((lParam & (1 << 30)) != 0);
             keyboard[(uint8_t)wParam] = key_is_down;
             InputCollection((uint8_t)wParam);
-            printf("%c", (uint8_t)wParam);
 
             switch(wParam) 
             {
@@ -416,7 +419,6 @@ LRESULT CALLBACK DebugWindowProc(HWND hwnd,
             key_was_down = ((lParam & (1 << 30)) != 0);
             keyboard[(uint8_t)wParam] = key_is_down;
             InputCollection((uint8_t)wParam);
-            printf("%c", (uint8_t)wParam);
 
             switch(wParam) 
             {

@@ -5,7 +5,12 @@
 
 struct player {
     struct vector2 pos;
-    double angle;
+    double lookangle;
+    double turnspeed;
+    
+    int fov;
+    int raycount; // Responsible for resolution and precision
+
     int health;
 };
 

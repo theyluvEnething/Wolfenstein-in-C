@@ -1,8 +1,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "headers/level.h"
-#include "headers/vector2.h"
 
+/* LEVEL */
 void init_map(char** map, struct level* level) {
 
     level->map = map;
@@ -32,11 +32,17 @@ void init_map(char** map, struct level* level) {
     /* Initialize obstacle array with map */
     for (int i = 0; i < cols; i++) {
         for (int j = 0; j < rows; j++) {
-            struct vector2 vec = {j, i};
-            level->objects[i][j].pos = vec;
+            level->objects[i][j].pos = vec2(j, i);
+            level->objects[i][j].size = vec2(1, 1);
             char c = level->map[i][j];
-            if (c != '#') {
+            if (c == '-') {
                 level->objects[i][j].type = EMPTY;
+            }
+            else if (c == '#') {
+                level->objects[i][j].type = WALL;
+            }
+            else if (c == '+') {
+                level->objects[i][j].type = SQUARE;
             }
         }
     }
@@ -69,3 +75,27 @@ void print_map(struct level* level) {
     }
 }
 
+
+/* OBJECTS */
+bool check_collision(struct vector2 pos, struct object obj) {
+
+    return true;
+
+    bool nice =  pos.x >= obj.pos.x || pos.x <= obj.pos.x+obj.size.x || pos.y >= obj.pos.y || pos.y <= obj.pos.y+obj.size.y;
+    printf("%s", nice);
+
+    return pos.x >= obj.pos.x || pos.x <= obj.pos.x+obj.size.x || pos.y >= obj.pos.y || pos.y <= obj.pos.y+obj.size.y;
+}
+
+bool check_obstacle_at_position(struct vector2 estimatedPosition, struct level* level, struct frame* frame) {
+    struct vector2 aPos = multiply_vector2(estimatedPosition, 1/(double)frame->width);
+    int i = level->width*aPos.x;
+    int j = level->width*aPos.y;
+    printf("%f, %f, index: %i\n", aPos.x, aPos.y);
+}
+
+
+
+int get_object_size(struct level level) {
+    return level.height*level.width;
+}
