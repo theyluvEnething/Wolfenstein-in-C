@@ -87,6 +87,8 @@ void draw_rectangle_wireframe_point(struct vector2 start_point, struct vector2 e
     #pragma region 
     // printf("Height: %i\n", height);
     // printf("Left: %i\n", left);
+
+
     // printf("Right: %i\n", right);
     // printf("Bottom: %i\n", bottom);
     // printf("Top: %i\n\n", top);
@@ -125,7 +127,7 @@ void draw_rectangle_wireframe_filled(struct vector2 pos, struct vector2 size, in
 void draw_circle(struct vector2 pos, int rad, int color, struct frame* frame) {
     for (int y=pos.y;y<pos.y+rad;y++) {
         for (int x=pos.x;x<pos.x+rad;x++) {
-            if (int_distance(x, y, pos.x+rad/2, pos.y+rad/2) >= rad/2 || x+frame->width*y < 0) 
+            if (distanceI(x, y, pos.x+rad/2, pos.y+rad/2) >= rad/2 || x+frame->width*y < 0) 
                 continue;
 
             frame->pixels[(x+frame->width*y)%(frame->width*frame->height)] = color;
@@ -136,7 +138,7 @@ void draw_circle(struct vector2 pos, int rad, int color, struct frame* frame) {
 void draw_center_circle(struct vector2 pos, int rad, int color, struct frame* frame) {
     for (int y=pos.y-rad;y<pos.y+rad;y++) {
         for (int x=pos.x-rad;x<pos.x+rad;x++) {
-            if (int_distance(x, y, pos.x, pos.y) >= rad/2 || x+frame->width*y < 0 || frame->width == 0 || frame->height == 0) 
+            if (distanceI(x, y, pos.x, pos.y) >= rad/2 || x+frame->width*y < 0 || frame->width == 0 || frame->height == 0) 
                 continue;
 
             frame->pixels[(x+frame->width*y)%(frame->width*frame->height)] = color;
@@ -234,7 +236,8 @@ void draw_cube(struct vector2 pos, struct vector2 size, int linewidth, int color
     draw_line(vector2(pos.x+size.x+size.x/2, pos.y+size.y/2),   vector2(pos.x+size.x+size.x/2, pos.y+size.y+size.y/2),   linewidth, color, frame);
 }
 
-void print_pointer(struct frame *frame) {
+/* OTHER METHODS */
+void print_frame(struct frame *frame) {
     printf("========================\n");
     printf("Pointer: 0x%p\n", frame);
     printf("Window Width: %i\n", frame->width);
@@ -242,7 +245,20 @@ void print_pointer(struct frame *frame) {
     printf("========================\n");
 }
 
-void db_map_level(struct level* level, struct frame* debug) {
+int get_direction(struct vector2 point1, struct vector2 point2) {
+    if (point1.x == point2.x || point1.y == point2.y) 
+        return 1;
+
+    if (point2.y > point1.y) {
+        return (point2.x > point1.x) ? 1 : -1;
+    }
+    else {
+        return (point2.x > point1.x) ? -1 : 1;
+    }
+}
+
+
+void draw_level2D(struct player* player, struct level* level, struct frame* debug) {
 
     // Calculate size of squares
     float sqr_size = debug->width / (float)level->width;
@@ -258,30 +274,31 @@ void db_map_level(struct level* level, struct frame* debug) {
             else if (level->objects[i][j].type == SQUARE) draw_rectangle_wireframe(vector2(x, y), vector2(sqr_size, sqr_size), 3, 0xFFFFFF, debug);
         }
     }
+
+    draw_player2D(player, level, debug);
 }
 
-void mn_map_level(struct level* level, struct frame* frame) {
-
+void draw_level3D(struct player* player, struct level* level, struct frame* frame) {
+    raycast3D(player, level, frame);
 }
 
 
 /* PLAYER */
-void draw_player(struct player* player, struct level* level, struct frame* frame) {
+void draw_player2D(struct player* player, struct level* level, struct frame* frame) {
 
     //printf("%f, %f\n", pPos.x, pPos.y);
     draw_center_circle(vector2(player->pos.x*frame->width, player->pos.y*frame->height), 10, 0xFF0000, frame);
-    raycast(player, level, frame);
+    raycast2D(player, level, frame);
 }
 
-void raycast(struct player* player, struct level* level, struct frame* frame) {
-
+void raycast2D(struct player* player, struct level* level, struct frame* frame) {
     struct vector2 pPos = vector2(player->pos.x*frame->width, player->pos.y*frame->height);
-    int max_range = int_distance(0, 0, frame->width, frame->height);
+    int max_range = distanceI(0, 0, frame->width, frame->height);
 
     float sqr_size = frame->width / (float)level->width;
     struct vector2 pSqr;
-    pSqr.x = int_clamp(pPos.x/sqr_size, 0, level->width-1);
-    pSqr.y = int_clamp(pPos.y/sqr_size, 0, level->height-1);
+    pSqr.x = clampI(pPos.x/sqr_size, 0, level->width-1);
+    pSqr.y = clampI(pPos.y/sqr_size, 0, level->height-1);
     
     struct vector2 sqrDiff;
 
@@ -290,12 +307,6 @@ void raycast(struct player* player, struct level* level, struct frame* frame) {
 
     float d_x = 0;
     float d_y = 0;
-    
-    printf("Player Square: (%.2f | %.2f) | ", pSqr.x, 5-pSqr.y);
-    printf("Square Diff: (%.2f | %.2f) | ", sqrDiff.x, sqrDiff.y);
-
-    printf("Sqr Start: (%.2f | %.2f) | ", pPos.x-(sqr_size-d_x), pPos.y-(sqr_size-d_y));
-    printf("Square End: (%.2f | %.2f) | ", pPos.x+d_x, pPos.y+d_y);
 
     struct object checkObj = level->objects[(int)(5-pSqr.y)][(int)pSqr.x];
     draw_rectangle_wireframe_point(vec2(pPos.x-(sqr_size-sqrDiff.x), pPos.y-(sqr_size-sqrDiff.y)), vec2(pPos.x+sqrDiff.x, pPos.y+sqrDiff.y), 5, 0x00FFFF, frame);
@@ -324,36 +335,38 @@ void raycast(struct player* player, struct level* level, struct frame* frame) {
 
 
             /* INTERPOLATION METHOD */
-            // if (level->objects[(int)grid.y][(int)grid.x].type == '#') {                 
-            //     range -= sqr_size/8;
-              
-            //     while (level->objects[(int)grid.y][(int)grid.x].type == '#') {
-            //         grid.x = ((uint8_t)(add_vector2(pPos, multiply_vector2(normalized_look_vector, range)).x/sqr_size))%(level->width+1);
-            //         grid.y = ((uint8_t)(add_vector2(pPos, multiply_vector2(normalized_look_vector, range)).y/sqr_size))%(level->height+1);
-            //         range -= 1;
-            //         total_calc++;
-            //     }
-            //     while (level->objects[(int)grid.y][(int)grid.x].type != '#') {
-            //         grid.x = ((uint8_t)(add_vector2(pPos, multiply_vector2(normalized_look_vector, range)).x/sqr_size))%(level->width+1);
-            //         grid.y = ((uint8_t)(add_vector2(pPos, multiply_vector2(normalized_look_vector, range)).y/sqr_size))%(level->height+1);
-            //         range += 1;
-            //         total_calc++;
-            //     }
-            //     range -= 3;
-            //     break;
-            // }
-            // range+=1;
+            if (level->objects[(int)grid.y][(int)grid.x].type == '#') {                 
+                
+                range -= sqr_size/4;
+                grid.x = ((uint8_t)(add_vector2(pPos, multiply_vector2(normalized_look_vector, range)).x/sqr_size))%(level->width+1);
+                grid.y = ((uint8_t)(add_vector2(pPos, multiply_vector2(normalized_look_vector, range)).y/sqr_size))%(level->height+1);
 
-            // MAKE BIG STEPS (AS BIG AS SQUARE-1) AND THEN ADD CORRECTION
-
-            /* CLEAN METHOD */
-            if (level->objects[(int)grid.y][(int)grid.x].type == '#') {
+                while (level->objects[(int)grid.y][(int)grid.x].type == '#') {
+                    range -= sqr_size/8;
+                    grid.x = ((uint8_t)(add_vector2(pPos, multiply_vector2(normalized_look_vector, range)).x/sqr_size))%(level->width+1);
+                    grid.y = ((uint8_t)(add_vector2(pPos, multiply_vector2(normalized_look_vector, range)).y/sqr_size))%(level->height+1);
+                    total_calc++;
+                }
+                while (level->objects[(int)grid.y][(int)grid.x].type != '#') {
+                    range += sqr_size/16;
+                    grid.x = ((uint8_t)(add_vector2(pPos, multiply_vector2(normalized_look_vector, range)).x/sqr_size))%(level->width+1);
+                    grid.y = ((uint8_t)(add_vector2(pPos, multiply_vector2(normalized_look_vector, range)).y/sqr_size))%(level->height+1);
+                    total_calc++;
+                }
+                while (level->objects[(int)grid.y][(int)grid.x].type == '#') {
+                    range -= 1;
+                    grid.x = ((uint8_t)(add_vector2(pPos, multiply_vector2(normalized_look_vector, range)).x/sqr_size))%(level->width+1);
+                    grid.y = ((uint8_t)(add_vector2(pPos, multiply_vector2(normalized_look_vector, range)).y/sqr_size))%(level->height+1);
+                    total_calc++;
+                }
                 break;
-            } 
-            range+=1;
+            }
+            range += sqr_size/4;
+
             total_calc++;
         }
 
+    
         draw_line(pPos, add_vector2(pPos, multiply_vector2(normalized_look_vector, range)), 1, 0xFF00FF, frame);
 
         #pragma region 
@@ -365,27 +378,136 @@ void raycast(struct player* player, struct level* level, struct frame* frame) {
         #pragma endregion
     }
 
-    printf("Calc: %i", total_calc);
-    printf("\n");
+    #pragma region
+    // printf("Player Square: (%.2f | %.2f) | ", pSqr.x, 5-pSqr.y);
+    // printf("Square Diff: (%.2f | %.2f) | ", sqrDiff.x, sqrDiff.y);
+    // printf("Sqr Start: (%.2f | %.2f) | ", pPos.x-(sqr_size-d_x), pPos.y-(sqr_size-d_y));
+    // printf("Square End: (%.2f | %.2f) | ", pPos.x+d_x, pPos.y+d_y);
+    // printf("Calc: %i", total_calc);
+    // printf("\n");
+    #pragma endregion
 }
 
 
 
+void raycast3D(struct player* player, struct level* level, struct frame* frame) {
+    struct vector2 pPos = vector2(player->pos.x*frame->width, player->pos.y*frame->height);
+    int max_range = distanceI(0, 0, frame->width, frame->height);
+
+    float sqr_size = frame->width / (float)level->width;
+    struct vector2 pSqr;
+    pSqr.x = clampI(pPos.x/sqr_size, 0, level->width-1);
+    pSqr.y = clampI(pPos.y/sqr_size, 0, level->height-1);
+    
+    struct vector2 sqrDiff;
+
+    sqrDiff.x = sqr_size - (int)pPos.x % (int)sqr_size;
+    sqrDiff.y = sqr_size - (int)pPos.y % (int)sqr_size;
+
+    float d_x = 0;
+    float d_y = 0;
+
+    if (level->objects[(int)pSqr.y][(int)pSqr.x].type == '#') return;
 
 
+    int raycount = player->raycount % 2 == 0 ? player->raycount : player->raycount-1;
+    float pixel_diff = frame->width/(float)raycount;
+    int max_height = frame->height/18; // frame->height/8;
+    
+    int total_calc = 0;
+    for (int i = -raycount/2; i <= raycount/2; i++) {
+        /* VARIABLES */
+        float angle_diff = i*(PI*(player->fov/(float)180)/(raycount)); 
+        double ray_angle = player->lookangle + angle_diff;
+        struct vector2 normalized_look_vector = normalize_vector(vector2(cosf(ray_angle), sinf(ray_angle)));
 
 
+        int range = 0;
+        while (range <= max_range) {
+
+            // FIX CRASH
+
+            struct vector2 grid;
+            grid.x = ((uint8_t)(add_vector2(pPos, multiply_vector2(normalized_look_vector, range)).x/sqr_size))%(level->width+1);
+            grid.y = ((uint8_t)(add_vector2(pPos, multiply_vector2(normalized_look_vector, range)).y/sqr_size))%(level->height+1);
 
 
-/* OTHER METHODS */
-int get_direction(struct vector2 point1, struct vector2 point2) {
-    if (point1.x == point2.x || point1.y == point2.y) 
-        return 1;
+            /* INTERPOLATION METHOD */
+            if (level->objects[(int)grid.y][(int)grid.x].type == '#') {                 
+                
+                range -= sqr_size/4;
+                grid.x = ((uint8_t)(add_vector2(pPos, multiply_vector2(normalized_look_vector, range)).x/sqr_size))%(level->width+1);
+                grid.y = ((uint8_t)(add_vector2(pPos, multiply_vector2(normalized_look_vector, range)).y/sqr_size))%(level->height+1);
 
-    if (point2.y > point1.y) {
-        return (point2.x > point1.x) ? 1 : -1;
+                while (level->objects[(int)grid.y][(int)grid.x].type == '#') {
+                    range -= sqr_size/8;
+                    grid.x = ((uint8_t)(add_vector2(pPos, multiply_vector2(normalized_look_vector, range)).x/sqr_size))%(level->width+1);
+                    grid.y = ((uint8_t)(add_vector2(pPos, multiply_vector2(normalized_look_vector, range)).y/sqr_size))%(level->height+1);
+                    total_calc++;
+                }
+                while (level->objects[(int)grid.y][(int)grid.x].type != '#') {
+                    range += sqr_size/16;
+                    grid.x = ((uint8_t)(add_vector2(pPos, multiply_vector2(normalized_look_vector, range)).x/sqr_size))%(level->width+1);
+                    grid.y = ((uint8_t)(add_vector2(pPos, multiply_vector2(normalized_look_vector, range)).y/sqr_size))%(level->height+1);
+                    total_calc++;
+                }
+                while (level->objects[(int)grid.y][(int)grid.x].type == '#') {
+                    range -= 1;
+                    grid.x = ((uint8_t)(add_vector2(pPos, multiply_vector2(normalized_look_vector, range)).x/sqr_size))%(level->width+1);
+                    grid.y = ((uint8_t)(add_vector2(pPos, multiply_vector2(normalized_look_vector, range)).y/sqr_size))%(level->height+1);
+                    total_calc++;
+                }
+                break;
+            }
+            range += sqr_size/4;
+
+            // MAKE BIG STEPS (AS BIG AS SQUARE-1) AND THEN ADD CORRECTION
+
+            /* CLEAN METHOD */
+            // if (level->objects[(int)grid.y][(int)grid.x].type == '#') {
+            //     break;
+            // } 
+            // range+=1;
+            total_calc++;
+        }
+
+        float line_x = frame->width/2-(pixel_diff * i);
+        float percent = 1-(100/(float)max_range)*range/100;
+
+        int r = 0xFF;
+        int g = 0xFF;
+        int b = 0xFF;
+
+        unsigned int hex = 0x000000 | (r << 24) | (g << 16) | (b << 8);
+
+        /*
+            523
+            10^3 * 100
+            10^2 * 20
+            10^1 * 1
+        */
+
+
+        int color = hex;
+        // printf("%i\n", hex);
+        // printf("%i\n", 0xFFFFFF);
+        draw_line(vec2(line_x, frame->height/2-frame->height*(max_range/(float)(range*max_height))), vec2(line_x, frame->height/2+frame->height*(max_range/(float)(range*max_height))), pixel_diff, color, frame);
+
+        #pragma region 
+        // printf("Look Angle: %.2f | ", ray_angle);
+        // printf("Player Pos: (%1.f, %1.f) | ", pPos.x, pPos.y);
+        // printf("Look Point: (%1.f, %1.f) | ", add_vector2(player->pos, multiply_vector2(normalized_look_vector, magnitude(range))).x, add_vector2(player->pos, multiply_vector2(normalized_look_vector, magnitude(range))).y);
+        // printf(" cos: %.2f | sin: %.2f", cosf(ray_angle), sinf(ray_angle));
+        // printf("\n");
+        #pragma endregion
     }
-    else {
-        return (point2.x > point1.x) ? -1 : 1;
-    }
+
+    #pragma region
+    // printf("Player Square: (%.2f | %.2f) | ", pSqr.x, 5-pSqr.y);
+    // printf("Square Diff: (%.2f | %.2f) | ", sqrDiff.x, sqrDiff.y);
+    // printf("Sqr Start: (%.2f | %.2f) | ", pPos.x-(sqr_size-d_x), pPos.y-(sqr_size-d_y));
+    // printf("Square End: (%.2f | %.2f) | ", pPos.x+d_x, pPos.y+d_y);
+    // printf("Calc: %i", total_calc);
+    // printf("\n");
+    #pragma endregion
 }

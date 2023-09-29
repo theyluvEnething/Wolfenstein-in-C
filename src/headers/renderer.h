@@ -38,14 +38,17 @@ void draw_rectangle_wireframe_point(struct vector2 start_point, struct vector2 e
 /* 3D */
 void draw_cube(struct vector2 pos, struct vector2 size, int linewidth, int color, struct frame* frame);
 
-void print_pointer(struct frame* frame);
+void print_frame(struct frame* frame);
 void wash_machine(struct vector2 fix_point, struct vector2* spin_vector, int rad, float time);
 
-void db_map_level(struct level* level, struct frame* debug);
-void mn_map_level(struct level* level, struct frame* frame);
+void draw_level2D(struct player* player, struct level* level, struct frame* debug);
+void draw_level3D(struct player* player, struct level* level, struct frame* frame);
 
-/* PlAYER */
-void draw_player(struct player* player, struct level* level, struct frame* frame);
-void raycast(struct player* player, struct level* level, struct frame* frame);
+/* 2D */
+void draw_player2D(struct player* player, struct level* level, struct frame* frame);
+void raycast2D(struct player* player, struct level* level, struct frame* frame);
+
+/* 3D */
+void raycast3D(struct player* player, struct level* level, struct frame* frame);
 
 #endif

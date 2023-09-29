@@ -34,7 +34,7 @@ void init_map(char** map, struct level* level) {
         for (int j = 0; j < rows; j++) {
             level->objects[i][j].pos = vec2(j, i);
             level->objects[i][j].size = vec2(1, 1);
-            char c = level->map[i][j];
+            char c = level->map[cols-i-1][j];
             if (c == '-') {
                 level->objects[i][j].type = EMPTY;
             }

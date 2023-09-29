@@ -67,8 +67,8 @@ void Initialize() {
     player.pos.y = 0.25;
     player.lookangle = 0.0;
     player.health = 100;
-    player.fov = 80;
-    player.raycount = game_window_width/4;
+    player.fov = 60;
+    player.raycount = game_window_width;
     int sensitivity = 5;
     player.turnspeed = sensitivity * (PI/180);
     print_info("Player: %p\n", &player);
@@ -150,10 +150,10 @@ int WINAPI WinMain(HINSTANCE hInstance,
     
     // ADD ONE TO ARRAY FOR NULL TERMINATOR
     char* mapArr[7] = {"###########",
-                       "#----++---#",
+                       "#----#----#",
+                       "#----###--#",
                        "#---------#",
-                       "#---###---#",
-                       "#---#-----#",
+                       "#---------#",
                        "###########"};
 
     init_map((char**)mapArr, &level);
@@ -165,7 +165,7 @@ int WINAPI WinMain(HINSTANCE hInstance,
     ShowWindow(debug_hwnd, showCmd);
 
     /* frame */
-    print_pointer(&frame);
+    print_frame(&frame);
     static unsigned int x1 = 100;
     static unsigned int y1 = 100; 
     static unsigned int x2 = 700;
@@ -196,31 +196,34 @@ int WINAPI WinMain(HINSTANCE hInstance,
         /* MAIN WINDOW */
         if (!is_minimized(&frame)) {
             background(0xFF0000, &frame);
+            draw_level3D(&player, &level, &frame);
 
-            draw_center_circle(vector2(500, 300), 100, 0xFFFFFF, &frame);
-            draw_rectangle_wireframe(vector2(300, 300), vector2(100, 100), 5, 0xFFFFF, &frame);
+            // draw_center_circle(vector2(500, 300), 100, 0xFFFFFF, &frame);
+            // draw_rectangle_wireframe(vector2(300, 300), vector2(100, 100), 5, 0xFFFFF, &frame);
 
-            struct vector2 temp = vector2(x2, y2);
+            // struct vector2 temp = vector2(x2, y2);
 
-            draw_line(vector2(x1, y1), vector2(temp.x, temp.y), 5, 0xFFFFFF, &frame);
-            draw_line(vector2(x1, y2), vector2(temp.x, y1), 5, 0xFFFFFF, &frame);
-            draw_line(vector2(x1, y1), vector2(x1, temp.y), 5, 0xFFFFFF, &frame);
-            draw_line(vector2(x2, y1), vector2(temp.x, temp.y), 5, 0xFFFFFF, &frame);
-            draw_line(vector2(x1, y2), vector2(temp.x, temp.y), 5, 0xFFFFFF, &frame);
-            draw_line(vector2(x1, y1), vector2(temp.x, y1), 5, 0xFFFFFF, &frame);
-            wash_machine(vector2(x1, y1), &temp, 200, deltaTime);
-            deltaTime += 0.02f;
+            // draw_line(vector2(x1, y1), vector2(temp.x, temp.y), 5, 0xFFFFFF, &frame);
+            // draw_line(vector2(x1, y2), vector2(temp.x, y1), 5, 0xFFFFFF, &frame);
+            // draw_line(vector2(x1, y1), vector2(x1, temp.y), 5, 0xFFFFFF, &frame);
+            // draw_line(vector2(x2, y1), vector2(temp.x, temp.y), 5, 0xFFFFFF, &frame);
+            // draw_line(vector2(x1, y2), vector2(temp.x, temp.y), 5, 0xFFFFFF, &frame);
+            // draw_line(vector2(x1, y1), vector2(temp.x, y1), 5, 0xFFFFFF, &frame);
+            // wash_machine(vector2(x1, y1), &temp, 200, deltaTime);
+            // deltaTime += 0.02f;
 
-            draw_cube(vector2(300, 500), vector2(100, 100), 2, 0xFFFFF, &frame);
+            // draw_cube(vector2(300, 500), vector2(100, 100), 2, 0xFFFFF, &frame);
+
+            //draw_player(&player, &level, &frame);
 
             update_screen(&game_hwnd);
         }
         /* DEBUG WINDOW */
         if (!is_minimized(&debug)) {
             background(0x000000, &debug);
-            db_map_level(&level, &debug);
+            draw_level2D(&player, &level, &debug);
 
-            draw_player(&player, &level, &debug);
+            //draw_player(&player, &level, &debug);
 
 
             update_screen(&debug_hwnd);
@@ -235,7 +238,21 @@ int WINAPI WinMain(HINSTANCE hInstance,
 }
 
 static void InputCollection(const char input) {
-    printf("[%c | %i]\n", (uint8_t)input, (uint8_t)input);
+    switch ((uint8_t)input) {
+        case 8:
+            printf("[%i | DEL]\n", (uint8_t)input, (uint8_t)input); 
+        break;
+        case 13:
+            printf("[%i | ENTER]\n", (uint8_t)input, (uint8_t)input);
+        break;
+        case 27:
+            printf("[%i | ESC]\n", (uint8_t)input, (uint8_t)input);
+        break;
+        default:
+            printf("[%i | %lc]\n", (uint8_t)input, (uint8_t)input);
+        break;
+    }
+
     HandlePlayerInput(input, &player);
 }
 

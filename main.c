@@ -145,7 +145,7 @@ int WINAPI WinMain(HINSTANCE hInstance,
     MSG msg = {0};
 
     /* frame */
-    print_pointer(&frame);
+    print_frame(&frame);
     int moveX = 0;
     int x1 = 500;
     int y1 = 500; 

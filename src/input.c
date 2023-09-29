@@ -3,6 +3,7 @@
 
 #include "headers/input.h"
 #include "headers/const.h"
+#include "headers/func.h"
 
 void HandlePlayerInput(const char input, struct player* player) {
 
@@ -11,23 +12,29 @@ void HandlePlayerInput(const char input, struct player* player) {
     // if (player->pos.y >= 1) player->pos.y = 0;
     // if (player->pos.y < 0) player->pos.y = 1;
 
+    float speed = 0.01;
+
     switch (input) {
 
         /* MOVEMENT */
         case 'W': {
-            player->pos.y +=0.01;
+            player->pos.y += sin(player->lookangle)*speed;
+            player->pos.x += cos(player->lookangle)*speed;
             if (player->pos.y >= 1) player->pos.y = 0;
         } break;
         case 'S': {
-            player->pos.y -= 0.01;
+            player->pos.y -= sin(player->lookangle)*speed;
+            player->pos.x -= cos(player->lookangle)*speed;
             if (player->pos.y < 0) player->pos.y = 1;
         } break;
         case 'A': {
-            player->pos.x -= 0.01;
+            player->pos.y += sin(player->lookangle+PI/2)*speed;
+            player->pos.x += cos(player->lookangle+PI/2)*speed;
             if (player->pos.x < 0) player->pos.x = 1;
         } break;
         case 'D': {
-            player->pos.x += 0.01;
+            player->pos.y -= sin(player->lookangle+PI/2)*speed;
+            player->pos.x -= cos(player->lookangle+PI/2)*speed;
             if (player->pos.x >= 1) player->pos.x = 0;
         } break;
 
