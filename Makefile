@@ -1,9 +1,11 @@
 src = src/main.c src/renderer.c src/func.c src/level.c src/vector2.c src/input.c
+bin = -lgdi32 -lgmp
+
 
 all:
-	gcc -o doom $(src) -lgdi32 -lm
+	gcc -o doom $(src) -lgdi32 -I. -L./lib -lgmp -lm
 debug:
-	gcc -g -o doom $(src) -lgdi32 -lm
+	gcc -g -o doom $(src) -lgdi32 -I. -L./lib -lgmp -lm
 clean:
 	rm -f doom
 

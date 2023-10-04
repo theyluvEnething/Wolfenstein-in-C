@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <time.h>
 #include <Windows.h>
 #include <stdbool.h>
 
@@ -57,19 +58,26 @@ static HDC debug_device_context = 0;
 const int game_window_width = 1080; const int game_window_height = 720;
 const int debug_window_width = 800; const int debug_window_height = 500;
 
-
 static bool mn_wnd_running = true; static bool mn_wnd_minimized = false;
 static bool db_wnd_running = true; static bool db_wnd_minimized = false;
 
+const int FPS = 60;
+int frame_duration;
+clock_t pTime;
+
+static void InputCollection();
 
 void Initialize() {
+    frame_duration = 1000/FPS;
+
     player.pos.x = 0.25; 
     player.pos.y = 0.25;
     player.lookangle = 0.0;
+    player.speed = 0.005;
     player.health = 100;
     player.fov = 60;
     player.raycount = game_window_width;
-    int sensitivity = 5;
+    int sensitivity = 3.5;
     player.turnspeed = sensitivity * (PI/180);
     print_info("Player: %p\n", &player);
 }
@@ -82,6 +90,7 @@ int WINAPI WinMain(HINSTANCE hInstance,
     printf("\n=========================================\n");
 
     Initialize();
+
 
     float mn_ratio = game_window_width / (float)game_window_height;
     float db_ratio = debug_window_width / (float)debug_window_height;
@@ -173,8 +182,17 @@ int WINAPI WinMain(HINSTANCE hInstance,
     static float deltaTime = 0;
 
     /* level */
+    pTime = clock();
     while (mn_wnd_running || db_wnd_running) 
     {
+        clock_t cTime = clock();
+        double elapsed = (double)(cTime - pTime) / CLOCKS_PER_SEC * 1000;
+
+        if (elapsed < frame_duration) continue;
+        pTime = cTime;
+        //printf("Frame rendered at %.2lf ms\n", 1000/elapsed);
+
+
 		static MSG message = { 0 };
 		while(PeekMessage(&message, NULL, 0, 0, PM_REMOVE)) { DispatchMessage(&message); }        
 
@@ -193,23 +211,30 @@ int WINAPI WinMain(HINSTANCE hInstance,
         x1 = mouse.x;
         y1 = mouse.y;
 
+        InputCollection();
+
         /* MAIN WINDOW */
         if (!is_minimized(&frame)) {
-            background(0xFF0000, &frame);
+            background(0x000000, &frame);
             draw_level3D(&player, &level, &frame);
 
+
+            draw_line(vec2(500, 500), vec2(x1, y1), 5, 0xFFF000, &frame);
             // draw_center_circle(vector2(500, 300), 100, 0xFFFFFF, &frame);
-            // draw_rectangle_wireframe(vector2(300, 300), vector2(100, 100), 5, 0xFFFFF, &frame);
+            //draw_rectangle_wireframe(vector2(300, 300), vector2(100, 100), 5, 0xFFFFF, &frame);
+            //draw_rectangle(vec2(500, 500), vec2(100, 200), 0xFF0000, &frame);
 
-            // struct vector2 temp = vector2(x2, y2);
+            struct vector2 temp = vector2(x2, y2);
 
-            // draw_line(vector2(x1, y1), vector2(temp.x, temp.y), 5, 0xFFFFFF, &frame);
-            // draw_line(vector2(x1, y2), vector2(temp.x, y1), 5, 0xFFFFFF, &frame);
-            // draw_line(vector2(x1, y1), vector2(x1, temp.y), 5, 0xFFFFFF, &frame);
-            // draw_line(vector2(x2, y1), vector2(temp.x, temp.y), 5, 0xFFFFFF, &frame);
-            // draw_line(vector2(x1, y2), vector2(temp.x, temp.y), 5, 0xFFFFFF, &frame);
-            // draw_line(vector2(x1, y1), vector2(temp.x, y1), 5, 0xFFFFFF, &frame);
-            // wash_machine(vector2(x1, y1), &temp, 200, deltaTime);
+            //draw_line(vec2(300, 300), vec2(1500, 500), 10, 0xFF0000, &frame);
+
+            draw_line(vector2(x1, y1), vector2(temp.x, temp.y), 5, 0xFFFFFF, &frame);
+            draw_line(vector2(x1, y2), vector2(temp.x, y1), 5, 0xFFFFFF, &frame);
+            draw_line(vector2(x1, y1), vector2(x1, temp.y), 5, 0xFFFFFF, &frame);
+            draw_line(vector2(x2, y1), vector2(temp.x, temp.y), 5, 0xFFFFFF, &frame);
+            draw_line(vector2(x1, y2), vector2(temp.x, temp.y), 5, 0xFFFFFF, &frame);
+            draw_line(vector2(x1, y1), vector2(temp.x, y1), 5, 0xFFFFFF, &frame);
+            //wash_machine(vector2(x1, y1), &temp, 200, deltaTime);
             // deltaTime += 0.02f;
 
             // draw_cube(vector2(300, 500), vector2(100, 100), 2, 0xFFFFF, &frame);
@@ -221,7 +246,7 @@ int WINAPI WinMain(HINSTANCE hInstance,
         /* DEBUG WINDOW */
         if (!is_minimized(&debug)) {
             background(0x000000, &debug);
-            draw_level2D(&player, &level, &debug);
+            //draw_level2D(&player, &level, &debug);
 
             //draw_player(&player, &level, &debug);
 
@@ -237,23 +262,23 @@ int WINAPI WinMain(HINSTANCE hInstance,
     return 0;
 }
 
-static void InputCollection(const char input) {
-    switch ((uint8_t)input) {
-        case 8:
-            printf("[%i | DEL]\n", (uint8_t)input, (uint8_t)input); 
-        break;
-        case 13:
-            printf("[%i | ENTER]\n", (uint8_t)input, (uint8_t)input);
-        break;
-        case 27:
-            printf("[%i | ESC]\n", (uint8_t)input, (uint8_t)input);
-        break;
-        default:
-            printf("[%i | %lc]\n", (uint8_t)input, (uint8_t)input);
-        break;
-    }
+static void InputCollection() {
+    // switch ((uint8_t)input) {
+    //     case 8:
+    //         printf("[%i | DEL]\n", (uint8_t)input, (uint8_t)input); 
+    //     break;
+    //     case 13:
+    //         printf("[%i | ENTER]\n", (uint8_t)input, (uint8_t)input);
+    //     break;
+    //     case 27:
+    //         printf("[%i | ESC]\n", (uint8_t)input, (uint8_t)input);
+    //     break;
+    //     default:
+    //         printf("[%i | %lc]\n", (uint8_t)input, (uint8_t)input);
+    //     break;
+    // }
 
-    HandlePlayerInput(input, &player);
+    HandleKeyboardInput(keyboard, &player);
 }
 
 LRESULT CALLBACK GameWindowProc(HWND hwnd, 
@@ -312,7 +337,9 @@ LRESULT CALLBACK GameWindowProc(HWND hwnd,
 
         /* KEYBOARD */
         case WM_SYSKEYDOWN:
+        case WM_SYSKEYUP:
 		case WM_KEYDOWN:
+        case WM_KEYUP:
         {
 			if (!has_focus)
                 break;
@@ -321,7 +348,7 @@ LRESULT CALLBACK GameWindowProc(HWND hwnd,
             key_is_down  = ((lParam & (1 << 31)) == 0);
             key_was_down = ((lParam & (1 << 30)) != 0);
             keyboard[(uint8_t)wParam] = key_is_down;
-            InputCollection((uint8_t)wParam);
+
 
             switch(wParam) 
             {
@@ -426,7 +453,9 @@ LRESULT CALLBACK DebugWindowProc(HWND hwnd,
 
         /* KEYBOARD */
         case WM_SYSKEYDOWN:
+        case WM_SYSKEYUP:
 		case WM_KEYDOWN:
+        case WM_KEYUP:
         {
 			if (!has_focus)
                 break;
@@ -435,7 +464,6 @@ LRESULT CALLBACK DebugWindowProc(HWND hwnd,
             key_is_down  = ((lParam & (1 << 31)) == 0);
             key_was_down = ((lParam & (1 << 30)) != 0);
             keyboard[(uint8_t)wParam] = key_is_down;
-            InputCollection((uint8_t)wParam);
 
             switch(wParam) 
             {

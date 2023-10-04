@@ -20,9 +20,11 @@ void update_screen();
 void background(int color, struct frame* frame);
 void draw_pixel(struct vector2 pos, int color, struct frame* frame);
 bool is_minimized(struct frame* frame);
+bool check_overlap(struct vector2 pos, struct frame* frame);
 
 /* FORMS */
 void draw_rectangle(struct vector2 pos, struct vector2 size, int color, struct frame* frame);
+void draw_rectangle_from_points(struct vector2 point1, struct vector2 point2, int color, struct frame* frame);
 void draw_circle(struct vector2 pos, int rad, int color, struct frame* frame);
 void draw_center_circle(struct vector2 pos, int rad, int color, struct frame* frame);
 void draw_pi_circle(struct vector2 pos, int rad, int color, struct frame* frame);

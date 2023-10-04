@@ -79,7 +79,8 @@
     "player.h": "c",
     "*.tcc": "c",
     "const.h": "c",
-    "input.h": "c"
+    "input.h": "c",
+    "time.h": "c"
   },
   "C_Cpp.errorSquiggles": "disabled"
 }

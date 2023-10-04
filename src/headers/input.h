@@ -2,7 +2,8 @@
 #define INPUT_H
 
 #include "player.h"
+#include "stdbool.h"
 
-void HandlePlayerInput(const char input, struct player* player);
+void HandleKeyboardInput(bool keyboard[], struct player* player);
 
 #endif

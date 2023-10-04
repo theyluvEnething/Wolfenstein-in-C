@@ -64,7 +64,7 @@ int distanceI(int x1, int y1, int x2, int y2) {
 
 int clampI(float d, float min, float max) {
   const float t = (d < min) ? min : d;
-  return (int)(t > max) ? max : t;
+  return (int)((t > max) ? max : t);
 }
 
 int minI(float a, float b) {
@@ -77,4 +77,40 @@ int maxI(float a, float b) {
 
 int sign(double x) {
     return (x > 0) - (x < 0);
+}
+
+
+
+long double esin(double angle) {
+  return 0;
+    // mpfr_t r_angle, result;
+    // mpfr_init2(r_angle, 10000);
+    // mpfr_set_ld(r_angle, angle, MPFR_RNDN);
+
+    // mpfr_init(result);
+    // mpfr_sin(result, r_angle, MPFR_RNDN);
+
+    // long double sinResult = mpfr_get_ld(result, MPFR_RNDN);
+
+    // mpfr_clear(r_angle);
+    // mpfr_clear(result);
+
+    // return sinResult;
+}
+
+long double ecos(double angle) {
+  return 1;
+    // mpfr_t r_angle, result;
+    // mpfr_init2(r_angle, PRECISION);
+    // mpfr_set_ld(r_angle, angle, MPFR_RNDN);
+
+    // mpfr_init(result);
+    // mpfr_cos(result, r_angle, MPFR_RNDN);
+
+    // long double cosResult = mpfr_get_ld(result, MPFR_RNDN);
+
+    // mpfr_clear(r_angle);
+    // mpfr_clear(result);
+
+    // return cosResult;
 }

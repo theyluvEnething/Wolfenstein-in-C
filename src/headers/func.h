@@ -20,4 +20,7 @@ int absI(float x);
 int minI(float a, float b);
 int maxI(float a, float b);
 
+long double esin(double angle);
+long double ecos(double angle);
+
 #endif
