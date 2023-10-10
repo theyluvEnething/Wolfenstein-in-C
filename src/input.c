@@ -7,8 +7,10 @@
 
 void HandleKeyboardInput(bool keyboard[], struct player* player) {
     if (keyboard['W']) {
-        player->pos.y += sin(player->lookangle)*player->speed;
-        player->pos.x += cos(player->lookangle)*player->speed;
+        float ty = player->pos.y + sin(player->lookangle)*player->speed;
+        float tx = player->pos.x + cos(player->lookangle)*player->speed;
+        player->pos.y = ty;
+        player->pos.x = tx;
         if (player->pos.y >= 1) player->pos.y = 0;
     }
     if (keyboard['S']) {

@@ -6,8 +6,8 @@ all:
 	gcc -o doom $(src) -lgdi32 -I. -L./lib -lgmp -lm
 debug:
 	gcc -g -o doom $(src) -lgdi32 -I. -L./lib -lgmp -lm
-clean:
-	rm -f doom
+run: debug
+	doom.exe
 
 test start: 
 	run test/test.exe

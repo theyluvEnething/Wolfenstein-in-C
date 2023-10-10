@@ -3,14 +3,14 @@
 #include <Windows.h>
 #include <stdbool.h>
 
-#include "headers/renderer.h"
-#include "headers/frame.h"
-#include "headers/level.h"
-#include "headers/func.h"
-#include "headers/vector2.h"
-#include "headers/player.h"
-#include "headers/input.h"
-#include "headers/const.h"
+#include "src/headers/renderer.h"
+#include "src/headers/frame.h"
+#include "src/headers/level.h"
+#include "src/headers/func.h"
+#include "src/headers/vector2.h"
+#include "src/headers/player.h"
+#include "src/headers/input.h"
+#include "src/headers/const.h"
 
 /* FRAME */
 struct frame frame = {0};
@@ -76,7 +76,7 @@ void Initialize() {
     player.speed = 0.005;
     player.health = 100;
     player.fov = 60;
-    player.raycount = game_window_width;
+    player.raycount = game_window_width/4;
     int sensitivity = 3.5;
     player.turnspeed = sensitivity * (PI/180);
     print_info("Player: %p\n", &player);
@@ -96,7 +96,6 @@ int WINAPI WinMain(HINSTANCE hInstance,
     float db_ratio = debug_window_width / (float)debug_window_height;
     if (mn_ratio != db_ratio) {
         print_warning("Incompatible ratio between main window and debug window.\n");
-        //printf(ANSI_COLOR_YELLOW "[WARNING]" ANSI_COLOR_RESET " - Incompatible ratio between main window and debug window.\n");
     }
 
     /* INITIALIZE  */
@@ -158,10 +157,11 @@ int WINAPI WinMain(HINSTANCE hInstance,
     /* GAME INIT */
     
     // ADD ONE TO ARRAY FOR NULL TERMINATOR
-    char* mapArr[7] = {"###########",
+    char* mapArr[8] = {"###########",
                        "#----#----#",
                        "#----###--#",
                        "#---------#",
+                       "#---++----#",
                        "#---------#",
                        "###########"};
 
@@ -190,7 +190,7 @@ int WINAPI WinMain(HINSTANCE hInstance,
 
         if (elapsed < frame_duration) continue;
         pTime = cTime;
-        //printf("Frame rendered at %.2lf ms\n", 1000/elapsed);
+        printf("Frame rendered at %.2lf ms\n", 1000/elapsed);
 
 
 		static MSG message = { 0 };
@@ -215,11 +215,20 @@ int WINAPI WinMain(HINSTANCE hInstance,
 
         /* MAIN WINDOW */
         if (!is_minimized(&frame)) {
-            background(0x000000, &frame);
+
+            for (int i = 0; i < frame.width*(frame.height/2); i++) {
+                frame.pixels[i] = 0x000044;
+            }
+            for (int i = (frame.width*(frame.height/2-1)); i < frame.width*frame.height-1; i++) {
+                frame.pixels[i] = 0x0000AA;
+            }
+            //background(0x000000, &frame);
+
+
             draw_level3D(&player, &level, &frame);
 
 
-            draw_line(vec2(500, 500), vec2(x1, y1), 5, 0xFFF000, &frame);
+            // draw_line(vec2(500, 500), vec2(x1, y1), 5, 0xFFF000, &frame);
             // draw_center_circle(vector2(500, 300), 100, 0xFFFFFF, &frame);
             //draw_rectangle_wireframe(vector2(300, 300), vector2(100, 100), 5, 0xFFFFF, &frame);
             //draw_rectangle(vec2(500, 500), vec2(100, 200), 0xFF0000, &frame);
@@ -228,12 +237,12 @@ int WINAPI WinMain(HINSTANCE hInstance,
 
             //draw_line(vec2(300, 300), vec2(1500, 500), 10, 0xFF0000, &frame);
 
-            draw_line(vector2(x1, y1), vector2(temp.x, temp.y), 5, 0xFFFFFF, &frame);
-            draw_line(vector2(x1, y2), vector2(temp.x, y1), 5, 0xFFFFFF, &frame);
-            draw_line(vector2(x1, y1), vector2(x1, temp.y), 5, 0xFFFFFF, &frame);
-            draw_line(vector2(x2, y1), vector2(temp.x, temp.y), 5, 0xFFFFFF, &frame);
-            draw_line(vector2(x1, y2), vector2(temp.x, temp.y), 5, 0xFFFFFF, &frame);
-            draw_line(vector2(x1, y1), vector2(temp.x, y1), 5, 0xFFFFFF, &frame);
+            // draw_line(vector2(x1, y1), vector2(temp.x, temp.y), 5, 0xFFFFFF, &frame);
+            // draw_line(vector2(x1, y2), vector2(temp.x, y1), 5, 0xFFFFFF, &frame);
+            // draw_line(vector2(x1, y1), vector2(x1, temp.y), 5, 0xFFFFFF, &frame);
+            // draw_line(vector2(x2, y1), vector2(temp.x, temp.y), 5, 0xFFFFFF, &frame);
+            // draw_line(vector2(x1, y2), vector2(temp.x, temp.y), 5, 0xFFFFFF, &frame);
+            // draw_line(vector2(x1, y1), vector2(temp.x, y1), 5, 0xFFFFFF, &frame);
             //wash_machine(vector2(x1, y1), &temp, 200, deltaTime);
             // deltaTime += 0.02f;
 
@@ -246,7 +255,7 @@ int WINAPI WinMain(HINSTANCE hInstance,
         /* DEBUG WINDOW */
         if (!is_minimized(&debug)) {
             background(0x000000, &debug);
-            //draw_level2D(&player, &level, &debug);
+            draw_level2D(&player, &level, &debug);
 
             //draw_player(&player, &level, &debug);
 

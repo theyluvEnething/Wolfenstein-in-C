@@ -15,6 +15,7 @@ struct level {
 struct object {
     struct vector2 pos;
     struct vector2 size;
+    float height_offset;
     enum type {EMPTY = '-', WALL = '#', SQUARE = '+'} type;
 };
 

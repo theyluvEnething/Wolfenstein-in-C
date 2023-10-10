@@ -37,12 +37,15 @@ void init_map(char** map, struct level* level) {
             char c = level->map[cols-i-1][j];
             if (c == '-') {
                 level->objects[i][j].type = EMPTY;
+                level->objects[i][j].height_offset = 0;
             }
             else if (c == '#') {
                 level->objects[i][j].type = WALL;
+                level->objects[i][j].height_offset = 0;
             }
             else if (c == '+') {
                 level->objects[i][j].type = SQUARE;
+                level->objects[i][j].height_offset = 500;
             }
         }
     }
