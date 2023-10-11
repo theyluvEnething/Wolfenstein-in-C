@@ -158,11 +158,11 @@ int WINAPI WinMain(HINSTANCE hInstance,
     
     // ADD ONE TO ARRAY FOR NULL TERMINATOR
     char* mapArr[8] = {"###########",
-                       "#----#----#",
-                       "#----###--#",
+                       "#---#-----#",
+                       "#---###---#",
                        "#---------#",
-                       "#---++----#",
-                       "#---------#",
+                       "#--#------#",
+                       "#--#------#",
                        "###########"};
 
     init_map((char**)mapArr, &level);
