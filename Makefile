@@ -3,9 +3,9 @@ bin = -lgdi32 -lgmp
 
 
 all:
-	gcc -o doom $(src) -lgdi32 -I. -L./lib -lgmp -lm
+	gcc -o doom $(src) -lgdi32 -I. -L./lib -lm
 debug:
-	gcc -g -o doom $(src) -lgdi32 -I. -L./lib -lgmp -lm
+	gcc -g -o doom $(src) -lgdi32 -I. -L./lib -lm
 run: debug
 	doom.exe
 
