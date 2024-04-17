@@ -3,14 +3,14 @@
 #include <Windows.h>
 #include <stdbool.h>
 
-#include "src/headers/renderer.h"
-#include "src/headers/frame.h"
-#include "src/headers/level.h"
-#include "src/headers/func.h"
-#include "src/headers/vector2.h"
-#include "src/headers/player.h"
-#include "src/headers/input.h"
-#include "src/headers/const.h"
+#include "headers/renderer.h"
+#include "headers/frame.h"
+#include "headers/level.h"
+#include "headers/func.h"
+#include "headers/vector2.h"
+#include "headers/player.h"
+#include "headers/input.h"
+#include "headers/const.h"
 
 /* FRAME */
 struct frame frame = {0};
@@ -161,8 +161,8 @@ int WINAPI WinMain(HINSTANCE hInstance,
                        "#---#-----#",
                        "#---###---#",
                        "#---------#",
-                       "#--#------#",
-                       "#--#------#",
+                       "#--++--#--#",
+                       "#------#--#",
                        "###########"};
 
     init_map((char**)mapArr, &level);

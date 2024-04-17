@@ -54,5 +54,7 @@ void raycast2D(struct player* player, struct level* level, struct frame* frame);
 
 /* 3D */
 void raycast3D(struct player* player, struct level* level, struct frame* frame);
+void reversecast3D(struct player* player, struct level* level, struct frame* frame);
+
 
 #endif
